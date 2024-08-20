@@ -1,0 +1,349 @@
+		void ConvolutionLayerFeedForward(NetworkPrototype* n)
+		{
+	
+			//Some of these constants may be useless.
+
+			const unsigned subLayers = 3;
+			const unsigned subLayerCount = n->m_LayerLayout[n->m_PositionData.Layer].NodesCount / subLayers;
+
+			const unsigned subLayerBiasesCount = n->m_LayerLayout[n->m_PositionData.Layer].BiasesCount / subLayers;
+			const unsigned subLayerWeightsCount = n->m_LayerLayout[n->m_PositionData.Layer].WeightsCount / subLayers;
+
+			const unsigned prevSubLayers = 1;
+			const unsigned prevSubLayerCount = n->m_LayerLayout[n->m_PositionData.Layer].NodesCount / prevSubLayers;
+
+			const unsigned receptiveWidth = 5;
+			const unsigned receptiveHeight = 5;
+
+			const unsigned horizontalStride = 1;
+			const unsigned verticalStride = 1;
+
+			const unsigned imgWidth = sqrtf(n->m_LayerLayout[n->m_PositionData.Layer - 1].NodesCount / prevSubLayers);
+			const unsigned imgHeight = sqrtf(n->m_LayerLayout[n->m_PositionData.Layer - 1].NodesCount / prevSubLayers);
+
+
+			const unsigned prevLayerAPos = n->m_PositionData.A - n->m_LayerLayout[n->m_PositionData.Layer-1].NodesCount;
+			const unsigned prevLayerACount = n->m_LayerLayout[n->m_PositionData.Layer - 1].NodesCount;
+
+			const unsigned horizontalSteps = (imgWidth - receptiveWidth ) / (horizontalStride) + 1;
+			const unsigned verticalSteps = (imgHeight - receptiveHeight ) / (verticalStride) + 1;
+
+			assert(imgWidth >= receptiveWidth && imgHeight >= receptiveHeight);
+
+			
+
+			unsigned subLayer = 0;
+			while (subLayer < subLayers)
+			{
+
+				unsigned subLayerIndex = 0;
+				while (subLayerIndex < subLayerCount)
+				{
+					
+				
+					const unsigned leftUpperCornerA = ((subLayerIndex % horizontalSteps) * horizontalStride) + ((subLayerIndex / verticalSteps) * verticalStride) * imgWidth ;
+
+
+
+					float weightedSum = 0;
+
+					unsigned height = 0;
+					while (height < receptiveHeight)
+					{
+						unsigned width = 0;
+						while (width < receptiveWidth)
+						{
+
+							weightedSum +=
+								n->m_Weights[n->m_PositionData.Weights + subLayerIndex * subLayerWeightsCount + height * receptiveWidth + width] *
+								n->m_A[prevLayerAPos  + leftUpperCornerA + height * imgWidth + width ];
+
+
+							width++;
+						}
+						height++;
+					}
+
+					float z = weightedSum + n->m_Biases[n->m_PositionData.Biases + subLayerIndex * subLayerBiasesCount];
+
+					n->m_Z[n->m_PositionData.Z + subLayerIndex + subLayer * subLayerCount] = z;
+					n->m_A[n->m_PositionData.A + subLayerIndex + subLayer * subLayerCount] = n->m_Functions.NeuronFunctions[n->m_PositionData.Layer - 1].f(z);
+
+					subLayerIndex++;
+				}
+				subLayer++;
+			}
+		}
+
+		void ConvolutionLayerBackpropegateZ(NetworkPrototype* n)
+		{
+			//Some of these constants may be usless.
+
+			const unsigned subLayers = 3;
+			const unsigned subLayerCount = n->m_LayerLayout[n->m_PositionData.Layer].NodesCount / subLayers;
+
+			const unsigned subLayerBiasesCount = n->m_LayerLayout[n->m_PositionData.Layer].BiasesCount / subLayers;
+			const unsigned subLayerWeightsCount = n->m_LayerLayout[n->m_PositionData.Layer].WeightsCount / subLayers;
+
+			const unsigned prevSubLayers = 1;
+			const unsigned prevSubLayerCount = n->m_LayerLayout[n->m_PositionData.Layer].NodesCount / prevSubLayers;
+
+			const unsigned receptiveWidth = 5;
+			const unsigned receptiveHeight = 5;
+
+			const unsigned horizontalStride = 1;
+			const unsigned verticalStride = 1;
+
+			const unsigned imgWidth = sqrtf(n->m_LayerLayout[n->m_PositionData.Layer - 1].NodesCount / prevSubLayers);
+			const unsigned imgHeight = sqrtf(n->m_LayerLayout[n->m_PositionData.Layer - 1].NodesCount / prevSubLayers);
+
+
+			const unsigned prevLayerAPos = n->m_PositionData.A - n->m_LayerLayout[n->m_PositionData.Layer].NodesCount;
+			const unsigned prevLayerACount = n->m_LayerLayout[n->m_PositionData.Layer - 1].NodesCount;
+
+			const unsigned horizontalSteps = (imgWidth - receptiveWidth) / (horizontalStride)+1;
+			const unsigned verticalSteps = (imgHeight - receptiveHeight) / (verticalStride)+1;
+
+			assert(imgWidth >= receptiveWidth && imgHeight >= receptiveHeight);
+		}
+
+  		void ConvolutionLayerBackpropegateBW(NetworkPrototype* n)
+		{
+			//Some of these constants may be usless.
+
+			const unsigned subLayers = 3;
+			const unsigned subLayerCount = n->m_LayerLayout[n->m_PositionData.Layer].NodesCount / subLayers;
+
+			const unsigned subLayerBiasesCount = n->m_LayerLayout[n->m_PositionData.Layer].BiasesCount / subLayers;
+			const unsigned subLayerWeightsCount = n->m_LayerLayout[n->m_PositionData.Layer].WeightsCount / subLayers;
+
+			const unsigned prevSubLayers = 1;
+			const unsigned prevSubLayerCount = n->m_LayerLayout[n->m_PositionData.Layer].NodesCount / prevSubLayers;
+
+			const unsigned receptiveWidth = 5;
+			const unsigned receptiveHeight = 5;
+
+			const unsigned horizontalStride = 1;
+			const unsigned verticalStride = 1;
+
+			const unsigned imgWidth  = sqrtf(n->m_LayerLayout[n->m_PositionData.Layer - 1].NodesCount / prevSubLayers);
+			const unsigned imgHeight = sqrtf(n->m_LayerLayout[n->m_PositionData.Layer - 1].NodesCount / prevSubLayers);
+
+
+			const unsigned prevLayerAPos = n->m_PositionData.A - n->m_LayerLayout[n->m_PositionData.Layer-1].NodesCount;
+			const unsigned prevLayerACount = n->m_LayerLayout[n->m_PositionData.Layer - 1].NodesCount;
+
+			const unsigned horizontalSteps = (imgWidth - receptiveWidth) / (horizontalStride)+1;
+			const unsigned verticalSteps = (imgHeight - receptiveHeight) / (verticalStride)+1;
+
+			assert(imgWidth >= receptiveWidth && imgHeight >= receptiveHeight);
+
+			unsigned subLayer = 0;
+			while (subLayer < subLayers)
+			{
+				unsigned subLayerIndex = 0;
+				while (subLayerIndex < subLayerCount)
+				{
+
+					const unsigned leftUpperCornerA = ((subLayerIndex % horizontalSteps) * horizontalStride) + ((subLayerIndex / verticalSteps) * verticalStride) * imgWidth;
+
+					unsigned height = 0;
+					while (height < receptiveHeight)
+					{
+
+						unsigned width = 0;
+						while(width < receptiveWidth)
+						{
+
+
+							
+
+
+								n->m_DeltaWeights[n->m_PositionData.Weights + subLayerWeightsCount * subLayer + height* receptiveWidth + width] =
+									n->m_DeltaZ[n->m_PositionData.Z + subLayer * subLayerCount + subLayerIndex] *
+									n->m_A[prevLayerAPos + leftUpperCornerA + height * prevLayerACount + width];
+
+							
+
+
+							width++;
+						}
+
+						height++;
+					}
+
+					n->m_Biases[n->m_PositionData.Biases + subLayerBiasesCount * subLayer + subLayerIndex] = n->m_DeltaZ[n->m_PositionData.Z + subLayer * subLayerCount + subLayerIndex];
+
+				subLayerIndex++;
+				}
+			subLayer++;
+			}
+
+		}
+
+
+		void PoolingLayerFeedForward(NetworkPrototype* n)
+		{
+			const unsigned subLayers = 1;
+			const unsigned subLayerCount = n->m_LayerLayout[n->m_PositionData.Layer].NodesCount / subLayers;
+
+			const unsigned subLayerBiasesCount = n->m_LayerLayout[n->m_PositionData.Layer].BiasesCount / subLayers;
+			const unsigned subLayerWeightsCount = n->m_LayerLayout[n->m_PositionData.Layer].WeightsCount / subLayers;
+
+			const unsigned prevSubLayers = 1;
+			const unsigned prevSubLayerCount = n->m_LayerLayout[n->m_PositionData.Layer-1].NodesCount / prevSubLayers;
+
+			const unsigned receptiveWidth = 2;
+			const unsigned receptiveHeight = 2;
+
+			const unsigned horizontalStride = 2;
+			const unsigned verticalStride = 2;
+
+			const unsigned imgWidth = sqrtf(n->m_LayerLayout[n->m_PositionData.Layer - 1].NodesCount / prevSubLayers);
+			const unsigned imgHeight = sqrtf(n->m_LayerLayout[n->m_PositionData.Layer - 1].NodesCount / prevSubLayers);
+
+
+			const unsigned prevLayerAPos = n->m_PositionData.A - n->m_LayerLayout[n->m_PositionData.Layer-1].NodesCount;
+			const unsigned prevLayerACount = n->m_LayerLayout[n->m_PositionData.Layer - 1].NodesCount;
+
+			const unsigned horizontalSteps = (imgWidth - receptiveWidth ) / (horizontalStride) + 1;
+			const unsigned verticalSteps = (imgHeight - receptiveHeight ) / (verticalStride) + 1;
+
+			assert(imgWidth >= receptiveWidth && imgHeight >= receptiveHeight);
+
+			assert(prevSubLayers == subLayers);
+
+			float check;
+			float champ;
+
+			unsigned subLayer = 0;
+			while (subLayer < subLayers)
+			{
+
+				unsigned subLayerIndex = 0;
+				while (subLayerIndex < subLayerCount)
+				{
+					//Beware "Edge"cases (The hint tells you to take a look at what happens when a receptive field goes outside of the image)
+					const unsigned leftUpperCornerA = ((subLayerIndex % horizontalSteps) * horizontalStride) + ((subLayerIndex / verticalSteps) * verticalStride) * imgWidth;
+
+
+					
+					champ = n->m_A[prevLayerAPos + subLayer * prevSubLayerCount + leftUpperCornerA];
+
+					unsigned height = 0;
+					while (height < receptiveHeight)
+					{
+						unsigned width = 0;
+						while (width < receptiveWidth)
+						{
+								
+								check = n->m_A[prevLayerAPos+ subLayer* prevSubLayerCount + leftUpperCornerA + width + height * imgWidth];
+								if (check > champ)
+								{
+									champ = check;
+								}
+
+
+							width++;
+						}
+						height++;
+					}
+
+					n->m_Z[n->m_PositionData.Z + subLayerIndex + subLayer * subLayerCount] = champ;
+					n->m_A[n->m_PositionData.A + subLayerIndex + subLayer * subLayerCount] = n->m_Functions.NeuronFunctions[n->m_PositionData.Layer-1].f(champ);
+
+					subLayerIndex++;
+				}
+				subLayer++;
+			}
+		}
+
+		void PoolingLayerBackpropegateZ(NetworkPrototype* n)
+		{
+
+			const unsigned subLayers = 3;
+			const unsigned subLayerCount = n->m_LayerLayout[n->m_PositionData.Layer].NodesCount / subLayers;
+
+			const unsigned latterSubLayers = 3;
+			const unsigned latterSubLayerCount = n->m_LayerLayout[n->m_PositionData.Layer + 1].NodesCount / latterSubLayers;
+
+
+			const unsigned receptiveWidth = 2;
+			const unsigned receptiveHeight = 2;
+
+			const unsigned horizontalStride = 2;
+			const unsigned verticalStride = 2;
+
+			const unsigned imgWidth = sqrtf(subLayerCount);
+			const unsigned imgHeight = sqrtf(subLayerCount);
+
+
+			const unsigned latterLayerZPos = n->m_PositionData.Z + n->m_LayerLayout[n->m_PositionData.Layer].NodesCount;
+			const unsigned latterLayerAPos = n->m_PositionData.A + n->m_LayerLayout[n->m_PositionData.Layer].NodesCount;
+
+
+			const unsigned horizontalSteps = (imgWidth - receptiveWidth) / (horizontalStride) + 1;
+			const unsigned verticalSteps = (imgHeight - receptiveHeight) / (verticalStride)   + 1;
+
+			assert(imgWidth >= receptiveWidth && imgHeight >= receptiveHeight);
+
+
+			assert(latterSubLayers == subLayers);
+
+			unsigned subLayer = 0;
+			while (subLayer < subLayers)
+			{
+
+				unsigned latterSubLayerIndex = 0;
+				while (latterSubLayerIndex < latterSubLayerCount)
+				{
+
+					//TODO: Beware "Edge"cases (This hint tells you to take a look at what happens when a receptive field goes outside of the image. Also what do you do when the field skips entries entierly)
+					
+					const unsigned leftUpperCornerA = ((latterSubLayerIndex % horizontalSteps) * horizontalStride) + ((latterSubLayerIndex / verticalSteps) * verticalStride) * imgWidth;
+
+
+
+
+
+
+					const float dz = n->m_DeltaZ[latterLayerZPos + subLayer * latterSubLayerCount + latterSubLayerIndex];
+
+
+					const float aLatter = n->m_A[latterLayerAPos + subLayer * latterSubLayerCount + latterSubLayerIndex];
+
+					unsigned height = 0;
+					while (height < receptiveHeight)
+					{
+						unsigned width = 0;
+						while (width < receptiveWidth)
+						{
+							const float a = n->m_A[n->m_PositionData.A + subLayer * subLayerCount + leftUpperCornerA + height * imgWidth + width];
+
+							//TODO: There is some funky shit that happens here when a z is observed in more than one receptive field. Edit: Think you should add the changes made for each receptive field it appears in.
+							if ( a == aLatter)
+							{
+								n->m_DeltaZ[n->m_PositionData.Z + subLayer * subLayerCount + leftUpperCornerA + height * imgWidth + width] =
+									dz * n->m_Functions.NeuronFunctionsDerivatives[n->m_PositionData.Layer-1].f(n->m_Z[n->m_PositionData.Z+ latterLayerZPos + subLayer * latterSubLayerCount + latterSubLayerIndex]); // f(n->m_Z[n->m_PositionData.Z]) does this need to be fixed?
+							}
+							else {
+								n->m_DeltaZ[n->m_PositionData.Z + subLayer * subLayerCount + leftUpperCornerA + height * imgWidth + width] = 0;
+							} 
+							width++;
+						}
+						height++;
+					}
+
+					latterSubLayerIndex++;
+				}
+				subLayer++;
+			}
+
+
+		}
+
+		void PoolingLayerBackpropegateBW(NetworkPrototype* n)
+		{
+			//This layer isnt supposed to have any weights or biases
+			return;
+		}
