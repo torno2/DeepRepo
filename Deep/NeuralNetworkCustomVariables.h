@@ -42,7 +42,7 @@ namespace TNNT
 
 
 		float LearningRate = 0.01f;
-		float RegularizationConstant = 0.001f;
+		float RegularizationConstant = 0.002f;
 		
 	};
 

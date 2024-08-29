@@ -6,6 +6,383 @@ namespace TNNT
 {
 	//Constructors And destructor
 
+	NetworkPrototype::NetworkPrototype()
+	{
+
+
+		unsigned int layoutCount = 4;
+		
+		LayerLayout* layerLayout = new LayerLayout[layoutCount];
+		{
+			layerLayout[0].NodesCount = 28 * 28;
+			layerLayout[0].ZCount = 0;
+			layerLayout[0].BiasesCount = 0;
+			layerLayout[0].WeightsCount = 0;
+
+			layerLayout[1].NodesCount = 30;
+			layerLayout[1].ZCount = layerLayout[1].NodesCount;
+			layerLayout[1].BiasesCount = layerLayout[1].NodesCount;
+			layerLayout[1].WeightsCount = layerLayout[1].NodesCount * layerLayout[1 - 1].NodesCount;
+
+			layerLayout[2].NodesCount = 30;
+			layerLayout[2].ZCount = layerLayout[2].NodesCount;
+			layerLayout[2].BiasesCount = layerLayout[2].NodesCount;
+			layerLayout[2].WeightsCount = layerLayout[2].NodesCount * layerLayout[2 - 1].NodesCount;
+
+			layerLayout[3].NodesCount = 10;
+			layerLayout[3].ZCount = layerLayout[3].NodesCount;
+			layerLayout[3].BiasesCount = layerLayout[3].NodesCount;
+			layerLayout[3].WeightsCount = layerLayout[3].NodesCount * layerLayout[3 - 1].NodesCount;
+
+
+		}
+
+		FunctionsLayout functions;
+		{
+
+			functions.NeuronFunctions = new FunctionsLayout::NeuronFunction[layoutCount - 1];
+			{
+				functions.NeuronFunctions[0].f = Math::Sigmoid;
+				functions.NeuronFunctions[1].f = Math::Sigmoid;
+				functions.NeuronFunctions[2].f = Math::Sigmoid;
+				;
+			}
+			functions.NeuronFunctionsDerivatives = new FunctionsLayout::NeuronFunction[layoutCount - 1];
+			{
+				functions.NeuronFunctionsDerivatives[0].f = Math::SigmoidDerivative;
+				functions.NeuronFunctionsDerivatives[1].f = Math::SigmoidDerivative;
+				functions.NeuronFunctionsDerivatives[2].f = Math::SigmoidDerivative;
+
+			}
+
+			functions.FeedForwardCallBackFunctions = new FunctionsLayout::NetworkRelayFunction[layoutCount - 1];
+			{
+				functions.FeedForwardCallBackFunctions[0].f = LayerFunctions::FullyConnectedFeedForward;
+				functions.FeedForwardCallBackFunctions[1].f = LayerFunctions::FullyConnectedFeedForward;
+				functions.FeedForwardCallBackFunctions[2].f = LayerFunctions::FullyConnectedFeedForward;
+
+			}
+
+			functions.BackPropegateCallBackFunctionsZ = new FunctionsLayout::NetworkRelayFunction[layoutCount - 1];
+			{
+				functions.BackPropegateCallBackFunctionsZ[0].f = LayerFunctions::FullyConnectedBackpropegateZ;
+				functions.BackPropegateCallBackFunctionsZ[1].f = LayerFunctions::FullyConnectedBackpropegateZ;
+				functions.BackPropegateCallBackFunctionsZ[2].f = CostFunctions::CrossEntropyDerivative;
+
+
+			}
+
+			functions.BackPropegateCallBackFunctionsBW = new FunctionsLayout::NetworkRelayFunction[layoutCount - 1];
+			{
+				functions.BackPropegateCallBackFunctionsBW[0].f = LayerFunctions::FullyConnectedBackpropegateBW;
+				functions.BackPropegateCallBackFunctionsBW[1].f = LayerFunctions::FullyConnectedBackpropegateBW;
+				functions.BackPropegateCallBackFunctionsBW[2].f = LayerFunctions::FullyConnectedBackpropegateBW;
+			}
+
+
+
+			functions.CostFunction.f = CostFunctions::CrossEntropy;
+			functions.CostFunctionDerivative.f = CostFunctions::CrossEntropyDerivative;
+
+
+
+			functions.RegularizationFunctions = new FunctionsLayout::NetworkRelayFunction[layoutCount - 1];
+			{
+				functions.RegularizationFunctions[0].f = RegularizationFunctions::L2Regularization;
+				functions.RegularizationFunctions[1].f = RegularizationFunctions::L2Regularization;
+				functions.RegularizationFunctions[2].f = RegularizationFunctions::L2Regularization;
+
+			}
+
+
+			functions.TrainingFunctions = new FunctionsLayout::NetworkRelayFunction[layoutCount - 1];
+			{
+				functions.TrainingFunctions[0].f = TrainingFunctions::GradientDecent;
+				functions.TrainingFunctions[1].f = TrainingFunctions::GradientDecent;
+				functions.TrainingFunctions[2].f = TrainingFunctions::GradientDecent;
+
+			}
+		}
+
+
+
+
+
+		m_LayerLayoutCount = layoutCount;
+
+
+		// 1 layer no network makes; need at least 2
+		assert(m_LayerLayoutCount >= 2);
+
+		// A layer of zero nodes would mean you have two separate networks (or a network with 1 less layer, if the input/output layer is missing), 
+		// and a layer with a negative numbers of nodes is something I don't want to think about.
+
+		//These are gonna get reused a lot in the constructor.
+		unsigned layoutIndex = 0;
+
+		//Getting the LayerLayout ready START
+
+		m_LayerLayout = new LayerLayout[m_LayerLayoutCount];
+
+		layoutIndex = 0;
+		while (layoutIndex < m_LayerLayoutCount)
+		{
+			m_LayerLayout[layoutIndex] = layerLayout[layoutIndex];
+
+			layoutIndex++;
+		}
+
+
+
+		//Getting the LayerLayout ready STOP
+
+
+
+
+		// DETERMENING THE COUNT OF MOST ARRAYS AND CALCULATING OTHER IMPORTANT INTEGERS START
+
+
+
+		//Keep in mind that there aren't supposed to be any biases or weights in the 0th layer, so their count for that layer should both be 0.
+		unsigned nodesTotal = 0;
+		unsigned zTotal = 0;
+		unsigned biasTotal = 0;
+		unsigned weightTotal = 0;
+
+
+		layoutIndex = 0;
+		while (layoutIndex < m_LayerLayoutCount)
+		{
+			// A layer of zero nodes would mean you have two separate networks (or a network with 1 less layer, if the input/output layer is missing), 
+			// and a layer with a negative numbers of nodes is something I don't want to think about.
+			assert(m_LayerLayout[layoutIndex].NodesCount > 0);
+
+			nodesTotal += m_LayerLayout[layoutIndex].NodesCount;
+			zTotal += m_LayerLayout[layoutIndex].ZCount;
+			biasTotal += m_LayerLayout[layoutIndex].BiasesCount;
+			weightTotal += m_LayerLayout[layoutIndex].WeightsCount;
+
+			layoutIndex++;
+		}
+
+		m_ACount = nodesTotal;
+		m_ZCount = zTotal;
+		m_BiasesCount = biasTotal;
+		m_WeightsCount = weightTotal;
+
+		m_InputBufferCount = m_LayerLayout[0].NodesCount;
+		m_OutputBufferCount = m_LayerLayout[m_LayerLayoutCount - 1].NodesCount;
+
+
+
+		// DETERMENING THE COUNT OF MOST ARRAYS AND CALCULATING OTHER IMPORTANT INTEGERS STOP
+
+
+
+		//MEMORY ALLOCATION AND POINTER SETUP START
+
+		//Order: A, Weights, Biases, Z, dZ, WeightsBuffer, BiasesBuffer, dWeights, dBiases,  Target
+		m_NetworkFixedDataCount = (m_ACount)+3 * (m_WeightsCount)+3 * (m_BiasesCount)+2 * (m_ZCount)+(m_OutputBufferCount);
+		m_NetworkFixedData = new float[m_NetworkFixedDataCount];
+
+		//NETWORK STRUCTURE
+		m_A = m_NetworkFixedData;
+		m_InputBuffer = m_A;
+		m_OutputBuffer = m_A + m_ACount - m_OutputBufferCount;
+
+		m_Weights = m_A + m_ACount;
+		m_Biases = m_Weights + m_WeightsCount;
+
+		m_Z = m_Biases + m_BiasesCount;
+		m_DeltaZ = m_Z + m_ZCount;
+
+		m_TempWeights = m_DeltaZ + m_ZCount;
+		m_TempBiases = m_TempWeights + m_WeightsCount;
+
+		m_DeltaWeights = m_TempBiases + m_BiasesCount;
+		m_DeltaBiases = m_DeltaWeights + m_WeightsCount;
+
+		//EVALUATION BUFFERS
+		m_TargetBuffer = m_DeltaBiases + m_BiasesCount;
+
+
+		//NETWORK STRUCTURE (Function layout)
+
+		m_Functions.NeuronFunctions = new FunctionsLayout::NeuronFunction[m_LayerLayoutCount - 1];
+		m_Functions.NeuronFunctionsDerivatives = new FunctionsLayout::NeuronFunction[m_LayerLayoutCount - 1];
+
+		m_Functions.FeedForwardCallBackFunctions = new FunctionsLayout::NetworkRelayFunction[m_LayerLayoutCount - 1];
+		m_Functions.BackPropegateCallBackFunctionsZ = new FunctionsLayout::NetworkRelayFunction[m_LayerLayoutCount - 1];
+		m_Functions.BackPropegateCallBackFunctionsBW = new FunctionsLayout::NetworkRelayFunction[m_LayerLayoutCount - 1];
+
+		m_Functions.CostFunction = functions.CostFunction;
+		m_Functions.CostFunctionDerivative = functions.CostFunctionDerivative;
+
+		m_Functions.RegularizationFunctions = new FunctionsLayout::NetworkRelayFunction[m_LayerLayoutCount - 1];
+		m_Functions.TrainingFunctions = new FunctionsLayout::NetworkRelayFunction[m_LayerLayoutCount - 1];
+
+
+
+
+		// Setting up pointers in the layer layout.
+		{
+			unsigned adjustA = 0;
+			unsigned aAdjustZ = 0;
+			unsigned aAdjustWeights = 0;
+			unsigned aAdjustBiases = 0;
+			layoutIndex = 0;
+			while (layoutIndex < m_LayerLayoutCount)
+			{
+
+				m_LayerLayout[layoutIndex].A = m_A + adjustA;
+
+				adjustA += m_LayerLayout[layoutIndex].NodesCount;
+
+
+				m_LayerLayout[layoutIndex].Z = m_Z + aAdjustZ;
+				m_LayerLayout[layoutIndex].dZ = m_DeltaZ + aAdjustZ;
+
+				aAdjustZ += m_LayerLayout[layoutIndex].ZCount;
+
+
+				m_LayerLayout[layoutIndex].Weights = m_Weights + aAdjustWeights;
+				m_LayerLayout[layoutIndex].dWeights = m_DeltaWeights + aAdjustWeights;
+				m_LayerLayout[layoutIndex].TempWeights = m_TempWeights + aAdjustWeights;
+
+				aAdjustWeights += m_LayerLayout[layoutIndex].WeightsCount;
+
+
+				m_LayerLayout[layoutIndex].Biases = m_Biases + aAdjustBiases;
+				m_LayerLayout[layoutIndex].dBiases = m_DeltaBiases + aAdjustBiases;
+				m_LayerLayout[layoutIndex].TempBiases = m_TempBiases + aAdjustBiases;
+
+				aAdjustBiases += m_LayerLayout[layoutIndex].BiasesCount;
+
+
+
+				layoutIndex++;
+			}
+		}
+
+
+		//MEMORY ALLOCATION AND POINTER SETUP STOP
+
+
+
+		//FUNCTION LAYOUT SETUP START
+
+		layoutIndex = 0;
+		while (layoutIndex < m_LayerLayoutCount)
+		{
+
+			if (layoutIndex < m_LayerLayoutCount - 1)
+			{
+				m_Functions.NeuronFunctions[layoutIndex] = functions.NeuronFunctions[layoutIndex];
+				m_Functions.NeuronFunctionsDerivatives[layoutIndex] = functions.NeuronFunctionsDerivatives[layoutIndex];
+
+				m_Functions.FeedForwardCallBackFunctions[layoutIndex] = functions.FeedForwardCallBackFunctions[layoutIndex];
+
+				m_Functions.BackPropegateCallBackFunctionsBW[layoutIndex] = functions.BackPropegateCallBackFunctionsBW[layoutIndex];
+				m_Functions.BackPropegateCallBackFunctionsZ[layoutIndex] = functions.BackPropegateCallBackFunctionsZ[layoutIndex];
+
+				m_Functions.RegularizationFunctions[layoutIndex] = functions.RegularizationFunctions[layoutIndex];
+				m_Functions.TrainingFunctions[layoutIndex] = functions.TrainingFunctions[layoutIndex];
+
+			}
+
+			layoutIndex++;
+		}
+
+		//FUNCTION LAYOUT STOP
+
+
+
+		//ENSURING THAT CERTAIN INTEGER AND FLOAT ARRAYS HAVE ACCEPTABLE INITIAL VALUES START
+
+
+
+
+
+
+
+		//WEIGHTS AND BIASES SETUP START
+		if (true)
+		{
+			//For randomly initializing the weights and biases
+			std::default_random_engine generator;
+			std::normal_distribution<float> distribution(0.0f, 1 / sqrt(m_LayerLayout[0].NodesCount));
+
+
+			unsigned index = 0;
+			while (index < m_WeightsCount)
+			{
+
+
+				float temp = distribution(generator);
+				m_Weights[index] = temp;
+
+				index++;
+			}
+
+
+
+
+			index = 0;
+			while (index < m_BiasesCount)
+			{
+
+				float temp = distribution(generator);
+				m_Biases[index] = temp;
+
+				index++;
+			}
+
+
+
+		}
+
+		else
+		{
+			//Sets all weights and biases to zero
+
+			unsigned index = 0;
+			while (index < m_WeightsCount)
+			{
+
+
+
+				m_Weights[index] = 0;
+
+				index++;
+			}
+
+
+
+
+			index = 0;
+			while (index < m_BiasesCount)
+			{
+
+
+				m_Biases[index] = 0;
+
+				index++;
+			}
+		}
+
+
+		LoadParams();
+
+		SetTempToWeights();
+		SetTempToBiases();
+		//WEIGHTS AND BIASES SETUP STOP
+
+
+
+	//ENSURING THAT CERTAIN INTEGER AND FLOAT ARRAYS HAVE ACCEPTABLE INITIAL VALUES STOP
+
+	}
+
 	NetworkPrototype::NetworkPrototype(LayerLayout* layerLayout, FunctionsLayout& functions, unsigned layoutCount, bool randomizeWeightsAndBiases)
 		: m_LayerLayoutCount(layoutCount)
 	{
@@ -301,6 +678,50 @@ namespace TNNT
 	float NetworkPrototype::CheckCost()
 	{
 		return CheckCostMasterFunction();
+	}
+
+	void NetworkPrototype::SaveParams()
+	{
+		std::ofstream paramFile("params.bin", std::ios::binary);
+
+		paramFile.write((char*)m_Biases, m_BiasesCount * sizeof(float));
+		paramFile.write((char*)m_Weights, m_WeightsCount * sizeof(float));
+	}
+
+	void NetworkPrototype::LoadParams()
+	{
+		std::ifstream paramFile("params.bin", std::ios::binary);
+		paramFile.read((char*)m_Biases, m_BiasesCount * sizeof(float));
+		paramFile.read((char*)m_Weights, m_WeightsCount * sizeof(float));
+
+		SetTempToWeights();
+		SetTempToBiases();
+
+
+		//paramFile.seekg(0);
+		//unsigned int it = 0;
+		//while (it < m_BiasesCount)
+		//{
+
+		//	char paramBuffer[sizeof(float)];
+		//	paramFile.read(paramBuffer, sizeof(paramBuffer));
+		//	memcpy(&m_Biases[it], paramBuffer, sizeof(float));
+
+		//	it++;
+		//}
+
+		//while (it < m_WeightsCount + m_BiasesCount)
+		//{
+		//	
+
+		//	char paramBuffer[sizeof(float)];
+		//	paramFile.read(paramBuffer, sizeof(paramBuffer));
+		//	//char flipedBuffer[4] = { paramBuffer[3],paramBuffer[2],paramBuffer[1],paramBuffer[0] };
+		//	memcpy(&m_Weights[it], paramBuffer, sizeof(float));
+
+		//	it++;
+		//}
+
 	}
 
 	void NetworkPrototype::Train(DataSet* data, HyperParameters& params)

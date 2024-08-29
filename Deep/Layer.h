@@ -26,8 +26,8 @@ namespace TNNT
 		unsigned BiasesCount = 30;
 		unsigned WeightsCount = 30*30;
 
-		float LearningRate = 0.01f;
-		float RegularizationConstant = 0.001f;
+		float LearningRate = 0.001f;
+		float RegularizationConstant = 0.0005f;
 
 		float NeuronFunction(float z);
 		float NeuronFunctionDerivative(float z);

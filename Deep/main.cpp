@@ -2,14 +2,15 @@
 #include "DataProcessing.h"
 #include "NetworkPrototype.h"
 #include "NetworkPrototype2.h"
-#include "NetworkPrototypeMT.h"
+//#include "NetworkPrototypeMT.h"
 #include "LayerFunctions.h"
-#include "LayerFunctionsMT.h"
+//#include "LayerFunctionsMT.h"
+//#include "webuse.cpp"
 
-#define test true
+#define test false
 #define testConv false
 
-#define clean false
+#define clean true
 #define setup true
 #define threadN 1
 
@@ -32,10 +33,13 @@
 
 
 
+
+
+
+
+
 int main() {
 	using namespace TNNT;
-
-
 
 
 
@@ -223,12 +227,14 @@ int main() {
 			data.TestInputs = new float[data.TestCount * inputSize];
 			data.TestTargets = new float[data.TestCount * labelSize];
 
-
 			//Data Formating start
 
 			ProcessMNISTDataMT(10, data.TrainingInputs, data.TraningTargets, "trainLabel.idx1-ubyte", "trainIm.idx3-ubyte", data.TrainingCount);
 			ProcessMNISTDataMT(10, data.ValidationInputs, data.ValidationTargets, "trainLabel.idx1-ubyte", "trainIm.idx3-ubyte", data.ValidationCount, 50000);
 			ProcessMNISTDataMT(10, data.TestInputs, data.TestTargets, "testLabel.idx1-ubyte", "testIm.idx3-ubyte", data.TestCount);
+			pr("HERE!!!!!!!!!!!!!!!");
+			pr("HERE!!!!!!!!!!!!!!!");
+			
 		}
 #endif 
 
@@ -622,9 +628,9 @@ int main() {
 
 		HyperParameters params;
 		{
-			params.Epochs = 4;
+			params.Epochs = 10;
 
-			params.BatchCount = 9;
+			params.BatchCount = 10;
 
 		}
 
@@ -688,9 +694,15 @@ int main() {
 
 
 	#if train
-			nP.Train(&data, params);
-				
+
+			
+
+			//nP.Train(&data, params);
+			
 			pr("Train time: " << t.Stop() << "s");
+
+			//.SaveParams();
+
 	#endif
 			//Traning End
 
@@ -700,6 +712,14 @@ int main() {
 
 			pr("Cost: " << nP.CheckCost());
 			pr("Guessrate: " << nP.CheckSuccessRate());
+
+			if (nP.CheckSuccessRate() > 0.9)
+			{
+				nP.SaveParams();
+				pr("We got it!");
+			}
+
+				
 
 			//PArr<float>(nP.m_OutputBuffer, nP.m_OutputBufferCount);
 
@@ -760,6 +780,8 @@ int main() {
 	}
 
 #endif
+
+
 
 
 	std::cin.get();

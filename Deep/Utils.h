@@ -102,11 +102,11 @@ unsigned ArrayMissmatchArrayCheck(T* arr1, T* arr2, unsigned count)
 	return counter;
 }
 
-class std::chrono::steady_clock::time_point;
+
 struct Timer
 {
 private:
-	std::chrono::steady_clock::time_point start;
+	float start;
 public:
 	void Start();
 	float Stop();

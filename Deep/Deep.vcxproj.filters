@@ -83,13 +83,13 @@
     <ClCompile Include="LayerFunctionsMT.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestLayout.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Layer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NetworkPrototype2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="webuse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

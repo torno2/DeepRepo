@@ -66,11 +66,15 @@ namespace TNNT {
 
 	public:
 
+		NetworkPrototype();
 		NetworkPrototype(LayerLayout* layerLayout, FunctionsLayout& functions, unsigned layoutCount , bool randomizeWeightsAndBiases = true);
 		~NetworkPrototype();
 
 		float CheckSuccessRate();
 		float CheckCost();
+
+		void SaveParams();
+		void LoadParams();
 
 		void Train(DataSet* data, HyperParameters& params);
 
