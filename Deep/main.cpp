@@ -10,7 +10,7 @@
 #define test false
 #define testConv false
 
-#define clean true
+#define clean false
 #define setup true
 #define threadN 1
 
@@ -232,8 +232,6 @@ int main() {
 			ProcessMNISTDataMT(10, data.TrainingInputs, data.TraningTargets, "trainLabel.idx1-ubyte", "trainIm.idx3-ubyte", data.TrainingCount);
 			ProcessMNISTDataMT(10, data.ValidationInputs, data.ValidationTargets, "trainLabel.idx1-ubyte", "trainIm.idx3-ubyte", data.ValidationCount, 50000);
 			ProcessMNISTDataMT(10, data.TestInputs, data.TestTargets, "testLabel.idx1-ubyte", "testIm.idx3-ubyte", data.TestCount);
-			pr("HERE!!!!!!!!!!!!!!!");
-			pr("HERE!!!!!!!!!!!!!!!");
 			
 		}
 #endif 
@@ -702,6 +700,8 @@ int main() {
 			pr("Train time: " << t.Stop() << "s");
 
 			//.SaveParams();
+
+			nP.LoadParams();
 
 	#endif
 			//Traning End

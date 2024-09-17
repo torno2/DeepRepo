@@ -1,6 +1,10 @@
 #pragma once
 //TODO: Make this an actual precompiled header 
 
+
+#include <stdio.h>
+#include <iostream>
+
 //Math
 //#include <limits>
 #include <cmath>
@@ -11,7 +15,7 @@
 
 //Debugging
 #include <assert.h> 
-#include <iostream>
+
 
 //Used to create random seeds in addition to debugging.
 #include <chrono>

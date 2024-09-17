@@ -680,47 +680,32 @@ namespace TNNT
 		return CheckCostMasterFunction();
 	}
 
+#pragma warning(disable : 4996)
 	void NetworkPrototype::SaveParams()
 	{
-		std::ofstream paramFile("params.bin", std::ios::binary);
+		FILE* paramFile = std::fopen("params.bin", "rb");
 
-		paramFile.write((char*)m_Biases, m_BiasesCount * sizeof(float));
-		paramFile.write((char*)m_Weights, m_WeightsCount * sizeof(float));
+
+		std::fread((char*)m_Biases, sizeof(float), m_BiasesCount, paramFile);
+		std::fread((char*)m_Weights, sizeof(float), m_WeightsCount, paramFile);
+
+		fclose(paramFile);
+
 	}
 
 	void NetworkPrototype::LoadParams()
 	{
-		std::ifstream paramFile("params.bin", std::ios::binary);
-		paramFile.read((char*)m_Biases, m_BiasesCount * sizeof(float));
-		paramFile.read((char*)m_Weights, m_WeightsCount * sizeof(float));
+		FILE* paramFile = std::fopen("params.bin", "wb");
+
+		std::fwrite((char*)m_Biases, sizeof(float), m_BiasesCount, paramFile);
+		std::fwrite((char*)m_Weights, sizeof(float), m_WeightsCount, paramFile);
+
+		fclose(paramFile);
 
 		SetTempToWeights();
 		SetTempToBiases();
 
 
-		//paramFile.seekg(0);
-		//unsigned int it = 0;
-		//while (it < m_BiasesCount)
-		//{
-
-		//	char paramBuffer[sizeof(float)];
-		//	paramFile.read(paramBuffer, sizeof(paramBuffer));
-		//	memcpy(&m_Biases[it], paramBuffer, sizeof(float));
-
-		//	it++;
-		//}
-
-		//while (it < m_WeightsCount + m_BiasesCount)
-		//{
-		//	
-
-		//	char paramBuffer[sizeof(float)];
-		//	paramFile.read(paramBuffer, sizeof(paramBuffer));
-		//	//char flipedBuffer[4] = { paramBuffer[3],paramBuffer[2],paramBuffer[1],paramBuffer[0] };
-		//	memcpy(&m_Weights[it], paramBuffer, sizeof(float));
-
-		//	it++;
-		//}
 
 	}
 
