@@ -88,16 +88,14 @@ void PrintMat(float* mat, unsigned width, unsigned height)
 
 void Timer::Start()
 {
-	//start = std::chrono::high_resolution_clock::now();
-	start = 1;
+	start = std::chrono::high_resolution_clock::now();
 }
 
 float Timer::Stop()
 {
-	//auto stop = std::chrono::high_resolution_clock::now();
-	//std::chrono::duration<float>  time = stop - start;
-	//return time.count();
-	return start;
+	auto stop = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<float>  time = stop - start;
+	return time.count();
 }
 
 

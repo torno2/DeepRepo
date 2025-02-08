@@ -5,7 +5,6 @@
 //#include "NetworkPrototypeMT.h"
 #include "LayerFunctions.h"
 //#include "LayerFunctionsMT.h"
-//#include "webuse.cpp"
 
 #define test false
 #define testConv false
@@ -626,7 +625,7 @@ int main() {
 
 		HyperParameters params;
 		{
-			params.Epochs = 10;
+			params.Epochs = 2;
 
 			params.BatchCount = 10;
 
@@ -695,13 +694,13 @@ int main() {
 
 			
 
-			//nP.Train(&data, params);
+			nP.Train(&data, params);
 			
 			pr("Train time: " << t.Stop() << "s");
 
-			//.SaveParams();
 
-			nP.LoadParams();
+
+			//nP.LoadParams();
 
 	#endif
 			//Traning End

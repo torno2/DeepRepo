@@ -106,7 +106,7 @@ unsigned ArrayMissmatchArrayCheck(T* arr1, T* arr2, unsigned count)
 struct Timer
 {
 private:
-	float start;
+	std::chrono::high_resolution_clock::time_point start;
 public:
 	void Start();
 	float Stop();
