@@ -81,8 +81,8 @@ namespace TNNT
 	//MEMORY ALLOCATION AND POINTER SETUP START
 		
 		//Order: A, Weights, Biases, Z, dZ, WeightsBuffer, BiasesBuffer, dWeights, dBiases,  Target
-		m_NetworkFixedDataCount = (m_ACount)+3 * (m_WeightsCount)+3 * (m_BiasesCount)+2 * (m_ZCount)+(m_OutputBufferCount);
-		m_NetworkFixedData = new float[m_NetworkFixedDataCount];
+		m_NetworkFixedDataCount = 1*(m_ACount)+ 4*(m_WeightsCount) + 3*(m_BiasesCount)+ 2*(m_ZCount) + 1*(m_OutputBufferCount);
+		m_NetworkFixedData = new float[m_NetworkFixedDataCount]; 
 
 		//NETWORK STRUCTURE
 		m_A = m_NetworkFixedData;
@@ -95,7 +95,9 @@ namespace TNNT
 		m_Z = m_Biases + m_BiasesCount;
 		m_DeltaZ = m_Z + m_ZCount;
 
-		m_TempWeights = m_DeltaZ + m_ZCount;
+		m_WeightsTranspose = m_DeltaZ + m_ZCount;
+
+		m_TempWeights = m_WeightsTranspose + m_WeightsCount;
 		m_TempBiases = m_TempWeights + m_WeightsCount;
 		
 		m_DeltaWeights = m_TempBiases + m_BiasesCount;
@@ -168,6 +170,7 @@ namespace TNNT
 				m_LayerLayout[layoutIndex].Weights = m_Weights + aAdjustWeights;
 				m_LayerLayout[layoutIndex].dWeights = m_DeltaWeights + aAdjustWeights;
 				m_LayerLayout[layoutIndex].TempWeights = m_TempWeights + aAdjustWeights;
+				m_LayerLayout[layoutIndex].WeightsTranspose = m_WeightsTranspose + aAdjustWeights;
 
 				aAdjustWeights += m_LayerLayout[layoutIndex].WeightsCount;
 
@@ -495,8 +498,9 @@ namespace TNNT
 
 		memcpy(&m_Weights[start], &m_TempWeights[start], dist * sizeof(float));
 
-
+		ResetTranspose(thread);
 	}
+
 
 
 	void NetworkPrototypeMT::SetTempToBiases(unsigned thread)
@@ -529,10 +533,50 @@ namespace TNNT
 	}
 
 
+
+	void NetworkPrototypeMT::ResetTranspose(unsigned thread)
+	{
+
+
+
+		//unsigned layerLayoutIndex = 1;
+		//while (layerLayoutIndex < m_LayerLayoutCount)
+		//{
+
+		//	LayerLayout prevLayer = m_LayerLayout[layerLayoutIndex - 1];
+		//	LayerLayout currentLayer = m_LayerLayout[layerLayoutIndex];
+
+		//	unsigned start = m_WorkloadLayout.Nodes[2 * m_SlaveThreadCount * (layerLayoutIndex) + 2 * thread];
+		//	unsigned stop = m_WorkloadLayout.Nodes[2 * m_SlaveThreadCount * (layerLayoutIndex) + 2 * thread + 1];
+
+
+
+
+
+		//	unsigned prevLayerIndex = 0;
+		//	while (prevLayerIndex < prevLayer.NodesCount)
+		//	{
+		//		unsigned currentLayerIndex = start;
+		//		while (currentLayerIndex < stop)
+		//		{
+
+		//			currentLayer.WeightsTranspose[currentLayer.NodesCount * prevLayerIndex + currentLayerIndex] = currentLayer.Weights[prevLayer.NodesCount * currentLayerIndex + prevLayerIndex];
+		//			currentLayerIndex++;
+		//		}
+		//		prevLayerIndex++;
+		//	}
+		//	layerLayoutIndex++;
+		//}
+		
+		
+	}
+
+
 	void NetworkPrototypeMT::SetTempToBiasesAndWeights(unsigned thread)
 	{
 		SetTempToBiases(thread);
 		SetTempToWeights(thread);
+		ResetTranspose(thread);
 	}
 
 

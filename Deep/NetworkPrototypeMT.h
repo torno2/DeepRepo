@@ -44,6 +44,8 @@ namespace TNNT
 		float* m_Weights;
 		float* m_Biases;
 
+		float* m_WeightsTranspose;
+
 		float* m_TempWeights;
 		float* m_TempBiases;
 
@@ -113,6 +115,8 @@ namespace TNNT
 
 		void SetTempToWeights(unsigned thread);
 		void SetWeightsToTemp(unsigned thread);
+
+		void ResetTranspose(unsigned thread);
 
 		void SetTempToBiasesAndWeights(unsigned thread);
 

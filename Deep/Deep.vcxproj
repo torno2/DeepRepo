@@ -136,7 +136,6 @@
     <ClInclude Include="LayerFunctions.h" />
     <ClInclude Include="LayerFunctionsMT.h" />
     <ClInclude Include="NetworkPrototype.h" />
-    <ClInclude Include="NetworkPrototype2.h" />
     <ClInclude Include="NetworkPrototypeMT.h" />
     <ClInclude Include="NeuralNetworkCustomVariables.h" />
     <ClInclude Include="TensorOverlay.h" />
@@ -151,7 +150,6 @@
     <ClCompile Include="LayerFunctions.cpp" />
     <ClCompile Include="LayerFunctionsMT.cpp" />
     <ClCompile Include="NetworkPrototype.cpp" />
-    <ClCompile Include="NetworkPrototype2.cpp" />
     <ClCompile Include="NetworkPrototypeMT.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math.cpp" />

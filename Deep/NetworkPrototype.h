@@ -9,11 +9,11 @@ namespace TNNT {
 	public:
 
 		//Order A, Weights, Biases, Z, dZ, dWeights, dBiases, WeightsBuffer, BiasesBuffer 
-		float* m_NetworkFixedData;
-		unsigned m_NetworkFixedDataCount;
+		char* m_NetworkFixedData;
+		unsigned m_NetworkFixedDataSize;
 
 		//Note: the m_...Count variabels treat the channels as if they've been flattend, m_LayerLayout does not. So if the input layer rperesented a 5x5 RGB image:
-		//m_LayerLayout[0].NodesCount would be 25, but when the nodes of the entire network are summed up into m_ACount, the inputlayer counts for: 5x5x3 = 75.
+		//m_LayerLayout[0].NodesCount would be 25, but when the nodes of the entire network are summed up into m_ACount, the inputlayer counts for: 5x5x3 = 75. This may or may not be a lie.
 		LayerLayout* m_LayerLayout;
 		unsigned m_LayerLayoutCount;
 
@@ -39,11 +39,14 @@ namespace TNNT {
 		float* m_Weights;
 		float* m_Biases;
 
+		float* m_WeightsTranspose; 
+
 		float* m_TempWeights;
 		float* m_TempBiases;
 
 		float* m_DeltaWeights;
 		float* m_DeltaBiases;
+
 
 		unsigned m_WeightsCount;
 		unsigned m_BiasesCount;
@@ -66,7 +69,6 @@ namespace TNNT {
 
 	public:
 
-		NetworkPrototype();
 		NetworkPrototype(LayerLayout* layerLayout, FunctionsLayout& functions, unsigned layoutCount , bool randomizeWeightsAndBiases = true);
 		~NetworkPrototype();
 
@@ -92,6 +94,8 @@ namespace TNNT {
 
 		void SetWeightsToTemp();
 		void SetTempToWeights();
+
+		void ResetTranspose();
 
 		void SetData(DataSet* data);
 		void SetHyperParameters(HyperParameters& params);

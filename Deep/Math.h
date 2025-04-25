@@ -18,6 +18,17 @@ namespace Math{
 	float CrossEntropyCostDerivative(float z,float a, float y);
 
 
+	
+	float Dot(const float* a, const float* b, size_t count);
+
+	void ScalarMult(float* vec, const float scalar, size_t count);
+	void ScalarMultAdd(float* dst, float* src, float scalar, size_t count); //Scalar multiplies src with scalar, and then adds the result to dst.
+
+	void VecAdd(float* dst, float* src, size_t count);
+
+	void Hadamard(float* dst, float* src, size_t count);
+
+	
 
 
 

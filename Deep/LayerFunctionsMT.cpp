@@ -24,26 +24,29 @@ namespace TNNT
 			unsigned layerIndex = start;
 			while (layerIndex < stop)
 			{
-				float weightedSum = 0;
+
+				//float weightedSum = 0;
 
 
 
-				unsigned prevIndex = 0;
-				while (prevIndex < prevLayer.NodesCount)
-				{
+				//unsigned prevIndex = 0;
+				//while (prevIndex < prevLayer.NodesCount)
+				//{
 
 
-					float prevA = prevLayer.A[prevIndex];
-					float weight = currentLayer.Weights[prevLayer.NodesCount * layerIndex + prevIndex];
-					weightedSum += weight * prevA;
+				//	float prevA = prevLayer.A[prevIndex];
+				//	float weight = currentLayer.Weights[prevLayer.NodesCount * layerIndex + prevIndex];
+				//	weightedSum += weight * prevA;
 
-					prevIndex++;
-				}
-
-
+				//	prevIndex++;
+				//}
 
 
-				currentLayer.Z[layerIndex] = weightedSum + currentLayer.Biases[layerIndex];
+				//currentLayer.Z[layerIndex] = weightedSum + currentLayer.Biases[layerIndex];
+				//currentLayer.A[layerIndex] = n->m_Functions.NeuronFunctions[n->m_LayerLayoutPosition - 1].f(currentLayer.Z[layerIndex]);
+
+
+				currentLayer.Z[layerIndex] = Math::Dot(&currentLayer.Weights[prevLayer.NodesCount * layerIndex], prevLayer.A, prevLayer.NodesCount) + currentLayer.Biases[layerIndex];
 
 				currentLayer.A[layerIndex] = n->m_Functions.NeuronFunctions[n->m_LayerLayoutPosition - 1].f(currentLayer.Z[layerIndex]);
 
@@ -89,8 +92,13 @@ namespace TNNT
 
 
 
-				float dz = n->m_Functions.NeuronFunctionsDerivatives[n->m_LayerLayoutPosition-1].f(currentLayer.Z[layerIndex]);
-				currentLayer.dZ[layerIndex] = errorSum * dz;
+				float dAdZ = n->m_Functions.NeuronFunctionsDerivatives[n->m_LayerLayoutPosition-1].f(currentLayer.Z[layerIndex]);
+				currentLayer.dZ[layerIndex] = errorSum * dAdZ;
+				
+
+
+				//float dAdZ = n->m_Functions.NeuronFunctionsDerivatives[n->m_LayerLayoutPosition - 1].f(currentLayer.Z[layerIndex]);
+				//currentLayer.dZ[layerIndex] = Math::Dot(&latterLayer.WeightsTranspose[latterLayer.NodesCount * layerIndex], latterLayer.dZ, latterLayer.NodesCount) * dAdZ;
 
 
 				layerIndex++;
@@ -122,26 +130,30 @@ namespace TNNT
 				const float dz = currentLayer.dZ[layerIndex];
 				
 				currentLayer.dBiases[layerIndex] = dz;
-				
-
-
-				unsigned prevLayerIndex = 0;
-				while (prevLayerIndex < prevLayer.NodesCount)
-				{
 
 
 
-					float a = prevLayer.A[prevLayerIndex];
-					float dw = a * dz;
+				memcpy(&currentLayer.dWeights[prevLayer.NodesCount * layerIndex], prevLayer.A, prevLayer.NodesCount * sizeof(float));
+				Math::ScalarMult(&currentLayer.dWeights[prevLayer.NodesCount * layerIndex], dz, prevLayer.NodesCount);
 
 
-					currentLayer.dWeights[prevLayer.NodesCount * layerIndex + prevLayerIndex] = dw;
+				//unsigned prevLayerIndex = 0;
+				//while (prevLayerIndex < prevLayer.NodesCount)
+				//{
 
 
-					
 
-					prevLayerIndex++;
-				}
+				//	float a = prevLayer.A[prevLayerIndex];
+				//	float dw = a * dz;
+
+
+				//	currentLayer.dWeights[prevLayer.NodesCount * layerIndex + prevLayerIndex] = dw;
+
+
+				//	
+
+				//	prevLayerIndex++;
+				//}
 
 				layerIndex++;
 			}
@@ -233,21 +245,24 @@ namespace TNNT
 			
 			
 
-			unsigned index = start;
-			while (index < stop)
-			{
+			//unsigned index = start;
+			//while (index < stop)
+			//{
 
 
 
 
-				currentLayer.TempWeights[index] *= (1 - (currentLayer.LearningRate * currentLayer.RegularizationConstant / ((float)n->m_Data->TrainingCount)));
-				
-				auto temp = currentLayer.TempWeights[index];
+			//	currentLayer.TempWeights[index] *= (1 - (currentLayer.LearningRate * currentLayer.RegularizationConstant / ((float)n->m_Data->TrainingCount)));
+			//	
+			//	auto temp = currentLayer.TempWeights[index];
 
-				index++;
+			//	index++;
 
 
-			}
+			//}
+
+			unsigned dist = stop - start;
+			Math::ScalarMult(&currentLayer.TempWeights[start], (1 - (currentLayer.LearningRate * currentLayer.RegularizationConstant / ((float)n->m_Data->TrainingCount))), dist);
 
 		}
 
@@ -268,30 +283,36 @@ namespace TNNT
 			unsigned bStop = n->m_WorkloadLayout.Biases[2 * thread + 1 + (layerPos - 1) * (2 * n->m_SlaveThreadCount)];
 
 			
-			unsigned wIndex = wStart;
-			while (wIndex < wStop)
-			{
-				
+			//unsigned wIndex = wStart;
+			//while (wIndex < wStop)
+			//{
+			//	
 
 
-				float temp = (currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)) * currentLayer.dWeights[wIndex];
-				currentLayer.TempWeights[wIndex] -= temp;
+			//	float temp = (currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)) * currentLayer.dWeights[wIndex];
+			//	currentLayer.TempWeights[wIndex] -= temp;
 
 
-				wIndex++;
-			}
+			//	wIndex++;
+			//}
+
+			unsigned wDist = wStop - wStart;
+			Math::ScalarMultAdd(&currentLayer.TempWeights[wStart], &currentLayer.dWeights[wStart], -(currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)), wDist);
 
 
-			unsigned bIndex = bStart;
-			while (bIndex < bStop)
-			{
+			//unsigned bIndex = bStart;
+			//while (bIndex < bStop)
+			//{
 
-				float tempB = (currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)) * currentLayer.dBiases[bIndex];
-				currentLayer.TempBiases[bIndex] -= tempB;
+			//	float tempB = (currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)) * currentLayer.dBiases[bIndex];
+			//	currentLayer.TempBiases[bIndex] -= tempB;
 
-				bIndex++;
-				
-			}
+			//	bIndex++;
+			//	
+			//}
+
+			unsigned bDist = bStop - bStart;
+			Math::ScalarMultAdd(&currentLayer.TempBiases[bStart], &currentLayer.dBiases[bStart], -(currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)), bDist);
 
 		}
 

@@ -143,3 +143,13 @@ void ThreadWorkloadDividerWithPaddingUtils(unsigned& start, unsigned& stop, unsi
 		stop = start + workloadCount;
 	}
 }
+
+void* allocate_aligned(size_t size, size_t alignment)
+{
+	return _aligned_malloc(size, alignment);
+}
+
+void deallocate_aligned(void* ptr)
+{
+	_aligned_free(ptr);
+}

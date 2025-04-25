@@ -1,12 +1,11 @@
 #include "pch.h"
 #include "DataProcessing.h"
 #include "NetworkPrototype.h"
-#include "NetworkPrototype2.h"
-//#include "NetworkPrototypeMT.h"
+#include "NetworkPrototypeMT.h"
 #include "LayerFunctions.h"
-//#include "LayerFunctionsMT.h"
+#include "LayerFunctionsMT.h"
 
-#define test false
+
 #define testConv false
 
 #define clean false
@@ -20,15 +19,19 @@
 #define train true
 
 
-#define FullyConnected true
-#define Convolution !FullyConnected && false 
-
-#define FullyConnectedMT false
-#define ConvolutionMT !FullyConnectedMT && false 
-
+#define Prototype true
+#define PrototypeMT true
 #define testPerformance true
-#define testPrototype testPerformance && true
-#define testMultithread testPerformance && false
+
+#define FullyConnected Prototype && true
+#define Convolution !FullyConnected && Prototype && false 
+
+#define FullyConnectedMT PrototypeMT && true
+#define ConvolutionMT !FullyConnectedMT && PrototypeMT && false 
+
+
+#define testPrototype testPerformance && Prototype
+#define testMultithread testPerformance && PrototypeMT
 
 
 
@@ -254,12 +257,12 @@ int main() {
 			layout[0].BiasesCount = 0;
 			layout[0].WeightsCount = 0;
 
-			layout[1].NodesCount = 30;
+			layout[1].NodesCount = 10;
 			layout[1].ZCount = layout[1].NodesCount;
 			layout[1].BiasesCount = layout[1].NodesCount;
 			layout[1].WeightsCount = layout[1].NodesCount * layout[1 - 1].NodesCount;
 
-			layout[2].NodesCount = 30;
+			layout[2].NodesCount = 10;
 			layout[2].ZCount = layout[2].NodesCount;
 			layout[2].BiasesCount = layout[2].NodesCount;
 			layout[2].WeightsCount = layout[2].NodesCount * layout[2 - 1].NodesCount;
@@ -268,6 +271,18 @@ int main() {
 			layout[3].ZCount = layout[3].NodesCount;
 			layout[3].BiasesCount = layout[3].NodesCount;
 			layout[3].WeightsCount = layout[3].NodesCount * layout[3 - 1].NodesCount;
+
+
+			//layout[0].LearningRate = 0.01;
+			//layout[1].LearningRate = 0.015;
+			//layout[2].LearningRate = 0.015;
+			//layout[3].LearningRate = 0.02;
+			//
+			//layout[0].RegularizationConstant = 0.001;
+			//layout[1].RegularizationConstant = 0.001;
+			//layout[2].RegularizationConstant = 0.001;
+			//layout[3].RegularizationConstant = 0.001;
+
 
 
 		}
@@ -339,6 +354,7 @@ int main() {
 			}
 		}
 
+		NetworkPrototype nP(layout, funcLayout, layoutCount, true);
 #endif
 #if Convolution
 
@@ -471,52 +487,12 @@ int main() {
 			}
 		}
 
-#endif
-
-#if test
-		//Testlayout
-		constexpr unsigned testlayerlayoutcount = 4;
-		FCLayer l0;
-		FCLayer l1;
-		FCLayer l2;
-		FCLayer l3;
-		{
-			
-			l0.NodesCount = layout[0].NodesCount;
-			l0.ZCount = 0;
-			l0.BiasesCount = 0;
-			l0.WeightsCount = 0;
-
-			
-			l1.NodesCount = layout[1].NodesCount;
-			l1.ZCount = l1.NodesCount;
-			l1.BiasesCount = l1.NodesCount;
-			l1.WeightsCount = l1.NodesCount * l0.NodesCount;
-
-			
-			l2.NodesCount = layout[2].NodesCount;
-			l2.ZCount = l2.NodesCount;
-			l2.BiasesCount = l2.NodesCount;
-			l2.WeightsCount = l2.NodesCount * l1.NodesCount;
-
-			
-			l3.NodesCount = layout[3].NodesCount;
-			l3.ZCount = l3.NodesCount;
-			l3.BiasesCount = l3.NodesCount;
-			l3.WeightsCount = l3.NodesCount * l2.NodesCount;
-
-
-		}
-		FCLayer testlayerlayout[testlayerlayoutcount] = {l0,l1,l2,l3};
-
-
-
-		void(*costfunction)(NetworkPrototype2*) = &CrossEntropyTest;
-		void(*costfunctionderivative)(NetworkPrototype2*) = &CrossEntropyDerivativeTest;
-		NetworkPrototype2 testNetwork(testlayerlayout, costfunction, costfunctionderivative,testlayerlayoutcount);
-#endif
-
 		NetworkPrototype nP(layout, funcLayout, layoutCount, true);
+#endif
+
+
+
+
 
 		//Prototype Network setup stop
 
@@ -532,12 +508,12 @@ int main() {
 			layoutMT[0].BiasesCount = 0;
 			layoutMT[0].WeightsCount = 0;
 
-			layoutMT[1].NodesCount = 30;
+			layoutMT[1].NodesCount = 10;
 			layoutMT[1].ZCount = layoutMT[1].NodesCount;
 			layoutMT[1].BiasesCount = layoutMT[1].NodesCount;
 			layoutMT[1].WeightsCount = layoutMT[1].NodesCount * layoutMT[1-1].NodesCount;
 
-			layoutMT[2].NodesCount = 30;
+			layoutMT[2].NodesCount = 10;
 			layoutMT[2].ZCount = layoutMT[2].NodesCount;
 			layoutMT[2].BiasesCount = layoutMT[2].NodesCount;
 			layoutMT[2].WeightsCount = layoutMT[2].NodesCount * layoutMT[2-1].NodesCount;
@@ -738,8 +714,6 @@ int main() {
 		{	
 #if train
 			nMT.SetData(&data);
-			pr("Cost: " << nMT.CheckCost());
-			pr("Guessrate: " << nMT.CheckSuccessRate());
 
 			//Training start
 			t.Start();

@@ -159,3 +159,8 @@ void LogChanges(T* target, bool* stopToken)
 	log.close();
 }
 
+
+// Memory allocation functions
+void* allocate_aligned(size_t size, size_t alignment);
+
+void deallocate_aligned(void* ptr);

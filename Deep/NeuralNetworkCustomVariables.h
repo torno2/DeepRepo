@@ -20,6 +20,7 @@ namespace TNNT
 		float* dBiases;
 		float* TempWeights;
 		float* TempBiases;
+		float* WeightsTranspose;
 
 		unsigned* LayerDim;
 
@@ -42,7 +43,7 @@ namespace TNNT
 
 
 		float LearningRate = 0.01f;
-		float RegularizationConstant = 0.002f;
+		float RegularizationConstant = 0.001f;
 		
 	};
 

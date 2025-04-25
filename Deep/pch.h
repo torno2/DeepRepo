@@ -4,11 +4,14 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <stdint.h> 
 
 //Math
 //#include <limits>
 #include <cmath>
 #include <random>
+
+#include <immintrin.h>
 
 //File access
 #include <fstream>
@@ -24,6 +27,11 @@
 #include <algorithm>
 #include <vector>
 
+
+//Alignment?
+#include <stdalign.h>
+
+
 //Multi-threading
 #include <thread>
 #include <mutex>
@@ -37,4 +45,6 @@
 #include "TNNTConstantsAndDefines.h"
 
 #include "Control.h"
+
+
 
