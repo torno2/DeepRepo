@@ -164,3 +164,21 @@ void LogChanges(T* target, bool* stopToken)
 void* allocate_aligned(size_t size, size_t alignment);
 
 void deallocate_aligned(void* ptr);
+
+
+
+
+
+unsigned PadForAlignment(unsigned size, unsigned alignment)
+{
+	unsigned adjustedSize = size + ((alignment - (size % alignment)) % alignment);
+	
+	return adjustedSize;
+}
+
+unsigned long long PadForAlignment(unsigned long long size, unsigned alignment)
+{
+	unsigned long long adjustedSize = size + ((alignment - (size % alignment)) % alignment);
+
+	return adjustedSize;
+}

@@ -1,5 +1,6 @@
 #pragma once
 #include "NeuralNetworkCustomVariables.h"
+#include "Layer.h"
 
 
 namespace TNNT {
@@ -10,34 +11,41 @@ namespace TNNT {
 
 		//Order A, Weights, Biases, Z, dZ, dWeights, dBiases, WeightsBuffer, BiasesBuffer 
 		char* m_NetworkFixedData;
-		unsigned m_NetworkFixedDataSize;
+
 
 		//Note: the m_...Count variabels treat the channels as if they've been flattend, m_LayerLayout does not. So if the input layer rperesented a 5x5 RGB image:
-		//m_LayerLayout[0].NodesCount would be 25, but when the nodes of the entire network are summed up into m_ACount, the inputlayer counts for: 5x5x3 = 75. This may or may not be a lie.
-		LayerLayout* m_LayerLayout;
-		unsigned m_LayerLayoutCount;
+		//m_LayerLayout[0].NodesCount would be 25, but when the nodes of the entire network are summed up into m_ACount, the inputlayer counts for: 5x5x3 = 75. 
+		//This may or may not be a lie; dont trust everything you read on the computer.
+		//Make sure that the sizeof(LayerHeader*) * layoutCount bytes of layerLayout (in the constructor), after the first 16 (or maybe 32 in the future),
+		//are reserved for the creation of m_LayerLayout
+		char* m_LayerLayoutBuffer;
+		LayerHeader* m_LayerLayoutPointer;
+		LayerHeader** m_LayerLayout;
 
-		FunctionsLayout m_Functions;
+		NetworkRelayFunction m_CostFunction;
+		
 
 		float* m_A;
-		unsigned m_ACount;
-
-
-		float* m_Z;
-		float* m_DeltaZ;
-		unsigned m_ZCount;
-
-
 		float* m_InputBuffer;
-		unsigned m_InputBufferCount;
-
 		float* m_OutputBuffer;
-		float* m_TargetBuffer;
-		unsigned m_OutputBufferCount;
-
 
 		float* m_Weights;
 		float* m_Biases;
+
+		float* m_Z;
+		float* m_DeltaZ;
+
+
+
+
+
+
+
+		
+
+
+
+
 
 		float* m_WeightsTranspose; 
 
@@ -47,13 +55,28 @@ namespace TNNT {
 		float* m_DeltaWeights;
 		float* m_DeltaBiases;
 
+		float* m_TargetBuffer;
+
+
+		
+		float m_CostBuffer;
+
+
+		unsigned m_NetworkFixedDataSize;
+
+		unsigned m_LayerLayoutCount;
+
+		unsigned m_ACount;
+		unsigned m_ZCount;
+
+		unsigned m_InputBufferCount;
+		unsigned m_OutputBufferCount;
 
 		unsigned m_WeightsCount;
 		unsigned m_BiasesCount;
 
-		
-		float m_CostBuffer;
-		
+
+
 		
 		HyperParameters m_HyperParameters;
 		
@@ -69,7 +92,7 @@ namespace TNNT {
 
 	public:
 
-		NetworkPrototype(LayerLayout* layerLayout, FunctionsLayout& functions, unsigned layoutCount , bool randomizeWeightsAndBiases = true);
+		NetworkPrototype(char* layerLayout, unsigned layoutCount , bool randomizeWeightsAndBiases = true);
 		~NetworkPrototype();
 
 		float CheckSuccessRate();
@@ -94,8 +117,6 @@ namespace TNNT {
 
 		void SetWeightsToTemp();
 		void SetTempToWeights();
-
-		void ResetTranspose();
 
 		void SetData(DataSet* data);
 		void SetHyperParameters(HyperParameters& params);

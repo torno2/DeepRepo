@@ -48,7 +48,27 @@ namespace Math
 		return(a - y);
 	}
 
+	size_t LCM(size_t a, size_t b)
+	{
 
+		return (a * b) / GCD(a, b);
+
+	}
+
+	size_t GCD(size_t a, size_t b)
+	{
+
+		while (b != 0)
+		{
+
+
+			size_t r = a % b;
+			a = b;
+			b = r;
+
+		}
+		return a;
+	}
 
 
 

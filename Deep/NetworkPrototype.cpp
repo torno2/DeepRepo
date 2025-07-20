@@ -6,7 +6,7 @@ namespace TNNT
 {
 	//Constructors And destructor
 
-	NetworkPrototype::NetworkPrototype(LayerLayout* layerLayout, FunctionsLayout& functions, unsigned layoutCount, bool randomizeWeightsAndBiases)
+	NetworkPrototype::NetworkPrototype(char* layerLayout, unsigned layoutCount, bool randomizeWeightsAndBiases)
 		: m_LayerLayoutCount(layoutCount)
 	{
 
@@ -26,6 +26,44 @@ namespace TNNT
 
 
 
+		unsigned dataSize;
+		unsigned dataAlignment;
+		char* tempLayerLayoutPointer = layerLayout;
+
+		memcpy(&dataSize, tempLayerLayoutPointer, sizeof(unsigned));
+		tempLayerLayoutPointer += sizeof(unsigned);
+
+		memcpy(&dataAlignment, tempLayerLayoutPointer, sizeof(unsigned));
+		tempLayerLayoutPointer += sizeof(unsigned);
+
+
+		m_NetworkFixedDataSize = dataSize;
+		
+		m_NetworkFixedData = (char*)allocate_aligned(m_NetworkFixedDataSize, dataAlignment);
+		char* tempFixedDataPointer = m_NetworkFixedData;
+
+		m_LayerLayout = (LayerHeader**)tempFixedDataPointer;
+		memcpy(&m_LayerLayout, tempLayerLayoutPointer, m_LayerLayoutCount * sizeof(LayerHeader**));
+		tempFixedDataPointer += PadForAlignment(m_LayerLayoutCount * sizeof(LayerHeader**), dataAlignment);
+
+		m_LayerLayout = (LayerHeader**)tempFixedDataPointer;
+		memcpy(&m_LayerLayout, tempLayerLayoutPointer, m_LayerLayoutCount * sizeof(LayerHeader**));
+		tempFixedDataPointer += PadForAlignment(m_LayerLayoutCount * sizeof(LayerHeader**), dataAlignment);
+
+
+		layoutIndex = 0;
+		while (layoutIndex < m_LayerLayoutCount)
+		{
+			//Remember to have the setup function add to tempFixedDataPointer pointer the correct sizesw
+			m_LayerLayout[layoutIndex]->Setup(tempFixedDataPointer, dataAlignment);
+
+			layoutIndex++;
+		}
+
+
+		m_LayerLayoutPointer = (LayerHeader*)(layerLayout + 8);
+
+
 		//Keep in mind that there aren't supposed to be any biases or weights in the 0th layer, so their count for that layer should both be 0.
 		unsigned nodesTotal = 0;
 		unsigned zTotal = 0;
@@ -36,15 +74,30 @@ namespace TNNT
 		layoutIndex = 0;
 		while (layoutIndex < m_LayerLayoutCount)
 		{
-			// A layer of zero nodes would mean you have two separate networks (or a network with 1 less layer, if the input/output layer is missing), 
+			// A layer of zero nodes would mean you have two separate networks (or a network with 1 less layer, if the input/output layer is missing),
 			// and a layer with a negative numbers of nodes is something I don't want to think about.
-			assert(layerLayout[layoutIndex].NodesCount > 0);
+			assert(m_LayerLayoutPointer->NodesCount > 0);
 
-			nodesTotal += layerLayout[layoutIndex].NodesCount;
-			zTotal += layerLayout[layoutIndex].ZCount;
-			biasTotal += layerLayout[layoutIndex].BiasesCount;
-			weightTotal += layerLayout[layoutIndex].WeightsCount;
+			nodesTotal += m_LayerLayoutPointer->NodesCount;
+			zTotal += m_LayerLayoutPointer->ZCount;
+			biasTotal += m_LayerLayoutPointer->BiasesCount;
+			weightTotal += m_LayerLayoutPointer->WeightsCount;
 
+
+			if (layoutIndex == 0)
+			{
+
+				m_InputBufferCount = m_LayerLayoutPointer->NodesCount;
+			}
+
+			if (layoutIndex == (m_LayerLayoutCount-1))
+			{
+				m_OutputBufferCount = m_LayerLayoutPointer->NodesCount;
+			}
+
+
+
+			m_LayerLayoutPointer = m_LayerLayoutPointer->Next();
 			layoutIndex++;
 		}
 
@@ -53,25 +106,24 @@ namespace TNNT
 		m_BiasesCount = biasTotal;
 		m_WeightsCount = weightTotal;
 
-		m_InputBufferCount = layerLayout[0].NodesCount;
-		m_OutputBufferCount = layerLayout[m_LayerLayoutCount - 1].NodesCount;
+
 
 
 
 		// DETERMENING THE COUNT OF MOST ARRAYS AND CALCULATING OTHER IMPORTANT INTEGERS STOP
 
-		constexpr size_t alignment = 64 / 8;
+		
 
 		//MEMORY ALLOCATION AND POINTER SETUP START
 
-		//Order: A, Weights, Biases, Z, dZ, WeightsBuffer, BiasesBuffer, dWeights, dBiases,  Target
+		//Order: LayerLayout, A, Weights, Biases, Z, dZ, WeightsBuffer, BiasesBuffer, dWeights, dBiases,  Target
 
-		unsigned layerLayoutChunkSize = m_LayerLayoutCount * sizeof(LayerLayout) + (alignment - (m_LayerLayoutCount * sizeof(LayerLayout)) % alignment);
 
-		m_NetworkFixedDataSize = 1 * (m_ACount) * sizeof(float)
+		m_NetworkFixedDataSize = layerLayoutSize
+			+ 1 * (m_ACount) * sizeof(float)
 			+ 4 * (m_WeightsCount) * sizeof(float) + 3 * (m_BiasesCount) * sizeof(float)
-			+ 2 * (m_ZCount) * sizeof(float) + 1 * (m_OutputBufferCount) * sizeof(float)
-			+ 1 * layerLayoutChunkSize;
+			+ 2 * (m_ZCount) * sizeof(float) + 1 * (m_OutputBufferCount) * sizeof(float);
+			
 
 		m_NetworkFixedData = (char*)allocate_aligned(m_NetworkFixedDataSize, alignment);
 
@@ -79,17 +131,22 @@ namespace TNNT
 
 
 		//NETWORK STRUCTURE
-		m_A = (float*)(m_NetworkFixedData);
+		
+		m_LayerLayoutBuffer = m_NetworkFixedData;
+		memcpy(m_LayerLayoutBuffer, layerLayout, layerLayoutSize);
+		
+
+		m_A = (float*)(m_LayerLayoutBuffer + layerLayoutSize);
 		m_InputBuffer = m_A;
 		m_OutputBuffer = m_A + m_ACount - m_OutputBufferCount;
 
-		m_Weights = m_A + m_ACount;
-		m_Biases = m_Weights + m_WeightsCount;
-
-		m_Z = m_Biases + m_BiasesCount;
+		m_Z = m_A + m_ACount;
 		m_DeltaZ = m_Z + m_ZCount;
 
-		m_WeightsTranspose = m_DeltaZ + m_ZCount;
+		m_Weights = m_DeltaZ + m_ZCount;
+		m_Biases = m_Weights + m_WeightsCount;
+
+		m_WeightsTranspose = m_Biases + m_BiasesCount;
 
 		m_TempWeights = m_WeightsTranspose + m_WeightsCount;
 		m_TempBiases = m_TempWeights + m_WeightsCount;
@@ -102,83 +159,47 @@ namespace TNNT
 
 
 
-		//Getting the LayerLayout ready START
-
-		unsigned padding = alignof(LayerLayout) - (((size_t)m_TargetBuffer) % alignof(LayerLayout));
-		pr(padding);
-
-		m_LayerLayout = (LayerLayout*)(((char*)(m_TargetBuffer + m_OutputBufferCount)) + padding);
-
-		pr(m_TargetBuffer);
-		pr(padding);
-		pr(m_LayerLayout);
-
-		layoutIndex = 0;
-		while (layoutIndex < m_LayerLayoutCount)
-		{
-			m_LayerLayout[layoutIndex] = layerLayout[layoutIndex];
-
-			layoutIndex++;
-		}
-		//Getting the LayerLayout ready STOP
-
-
-
-		//NETWORK STRUCTURE (Function layout)
-
-		m_Functions.NeuronFunctions = new FunctionsLayout::NeuronFunction[m_LayerLayoutCount - 1];
-		m_Functions.NeuronFunctionsDerivatives = new FunctionsLayout::NeuronFunction[m_LayerLayoutCount - 1];
-
-		m_Functions.FeedForwardCallBackFunctions = new FunctionsLayout::NetworkRelayFunction[m_LayerLayoutCount - 1];
-		m_Functions.BackPropegateCallBackFunctionsZ = new FunctionsLayout::NetworkRelayFunction[m_LayerLayoutCount - 1];
-		m_Functions.BackPropegateCallBackFunctionsBW = new FunctionsLayout::NetworkRelayFunction[m_LayerLayoutCount - 1];
-
-		m_Functions.CostFunction = functions.CostFunction;
-		m_Functions.CostFunctionDerivative = functions.CostFunctionDerivative;
-
-		m_Functions.RegularizationFunctions = new FunctionsLayout::NetworkRelayFunction[m_LayerLayoutCount - 1];
-		m_Functions.TrainingFunctions = new FunctionsLayout::NetworkRelayFunction[m_LayerLayoutCount - 1];
-
 
 
 
 		// Setting up pointers in the layer layout.
 		{
+			m_LayerLayoutPointer = (LayerHeader*)m_LayerLayoutBuffer;
 			unsigned adjustA = 0;
-			unsigned aAdjustZ = 0;
-			unsigned aAdjustWeights = 0;
-			unsigned aAdjustBiases = 0;
+			unsigned adjustZ = 0;
+			unsigned adjustWeights = 0;
+			unsigned adjustBiases = 0;
 			layoutIndex = 0;
 			while (layoutIndex < m_LayerLayoutCount)
 			{
 
-				m_LayerLayout[layoutIndex].A = m_A + adjustA;
+				m_LayerLayoutPointer->A = m_A + adjustA;
 
-				adjustA += m_LayerLayout[layoutIndex].NodesCount;
-
-
-				m_LayerLayout[layoutIndex].Z = m_Z + aAdjustZ;
-				m_LayerLayout[layoutIndex].dZ = m_DeltaZ + aAdjustZ;
-
-				aAdjustZ += m_LayerLayout[layoutIndex].ZCount;
+				adjustA += m_LayerLayoutPointer->NodesCount;
 
 
-				m_LayerLayout[layoutIndex].Weights = m_Weights + aAdjustWeights;
-				m_LayerLayout[layoutIndex].dWeights = m_DeltaWeights + aAdjustWeights;
-				m_LayerLayout[layoutIndex].TempWeights = m_TempWeights + aAdjustWeights;
-				m_LayerLayout[layoutIndex].WeightsTranspose = m_WeightsTranspose + aAdjustWeights;
+				m_LayerLayoutPointer->Z = m_Z + adjustZ;
+				m_LayerLayoutPointer->dZ = m_DeltaZ + adjustZ;
 
-				aAdjustWeights += m_LayerLayout[layoutIndex].WeightsCount;
+				adjustZ += m_LayerLayoutPointer->ZCount;
 
 
-				m_LayerLayout[layoutIndex].Biases = m_Biases + aAdjustBiases;
-				m_LayerLayout[layoutIndex].dBiases = m_DeltaBiases + aAdjustBiases;
-				m_LayerLayout[layoutIndex].TempBiases = m_TempBiases + aAdjustBiases;
+				m_LayerLayoutPointer->Weights = m_Weights + adjustWeights;
+				m_LayerLayoutPointer->dWeights = m_DeltaWeights + adjustWeights;
+				m_LayerLayoutPointer->TempWeights = m_TempWeights + adjustWeights;
+				m_LayerLayoutPointer->WeightsTranspose = m_WeightsTranspose + adjustWeights;
 
-				aAdjustBiases += m_LayerLayout[layoutIndex].BiasesCount;
+				adjustWeights += m_LayerLayoutPointer->WeightsCount;
 
 
+				m_LayerLayoutPointer->Biases = m_Biases + adjustBiases;
+				m_LayerLayoutPointer->dBiases = m_DeltaBiases + adjustBiases;
+				m_LayerLayoutPointer->TempBiases = m_TempBiases + adjustBiases;
 
+				adjustBiases += m_LayerLayoutPointer->BiasesCount;
+
+
+				m_LayerLayoutPointer->Next();
 				layoutIndex++;
 			}
 		}
@@ -187,32 +208,6 @@ namespace TNNT
 		//MEMORY ALLOCATION AND POINTER SETUP STOP
 
 
-
-		//FUNCTION LAYOUT SETUP START
-
-		layoutIndex = 0;
-		while (layoutIndex < m_LayerLayoutCount)
-		{
-
-			if (layoutIndex < m_LayerLayoutCount - 1)
-			{
-				m_Functions.NeuronFunctions[layoutIndex] = functions.NeuronFunctions[layoutIndex];
-				m_Functions.NeuronFunctionsDerivatives[layoutIndex] = functions.NeuronFunctionsDerivatives[layoutIndex];
-
-				m_Functions.FeedForwardCallBackFunctions[layoutIndex] = functions.FeedForwardCallBackFunctions[layoutIndex];
-
-				m_Functions.BackPropegateCallBackFunctionsBW[layoutIndex] = functions.BackPropegateCallBackFunctionsBW[layoutIndex];
-				m_Functions.BackPropegateCallBackFunctionsZ[layoutIndex] = functions.BackPropegateCallBackFunctionsZ[layoutIndex];
-
-				m_Functions.RegularizationFunctions[layoutIndex] = functions.RegularizationFunctions[layoutIndex];
-				m_Functions.TrainingFunctions[layoutIndex] = functions.TrainingFunctions[layoutIndex];
-
-			}
-
-			layoutIndex++;
-		}
-
-		//FUNCTION LAYOUT STOP
 
 
 
@@ -227,9 +222,10 @@ namespace TNNT
 		//WEIGHTS AND BIASES SETUP START
 		if (randomizeWeightsAndBiases)
 		{
+			m_LayerLayoutPointer = (LayerHeader*)m_LayerLayoutBuffer;
 			//For randomly initializing the weights and biases
 			std::default_random_engine generator;
-			std::normal_distribution<float> distribution(0.0f, 1 / sqrt(m_LayerLayout[0].NodesCount));
+			std::normal_distribution<float> distribution(0.0f, 1 / sqrt(m_LayerLayoutPointer->NodesCount));
 
 
 			unsigned index = 0;
@@ -400,32 +396,6 @@ namespace TNNT
 		memcpy(m_TempWeights, m_Weights, sizeof(float) * m_WeightsCount);
 	}
 
-	void NetworkPrototype::ResetTranspose()
-	{
-		unsigned layerLayoutIndex = 1;
-		while (layerLayoutIndex < m_LayerLayoutCount)
-		{
-
-			LayerLayout prevLayer = m_LayerLayout[layerLayoutIndex - 1];
-			LayerLayout currentLayer = m_LayerLayout[layerLayoutIndex];
-
-			unsigned prevLayerIndex = 0;
-			while (prevLayerIndex < prevLayer.NodesCount)
-			{
-				unsigned currentLayerIndex = 0;
-				while (currentLayerIndex < currentLayer.NodesCount)
-				{
-
-					currentLayer.WeightsTranspose[currentLayer.NodesCount * prevLayerIndex + currentLayerIndex] = currentLayer.Weights[prevLayer.NodesCount * currentLayerIndex + prevLayerIndex];
-					currentLayerIndex++;
-				}
-				prevLayerIndex++;
-			}
-			layerLayoutIndex++;
-		}
-
-
-	}
 
 
 
@@ -484,8 +454,8 @@ namespace TNNT
 
 
 		m_LayerLayoutPosition = 1;
-
-
+		m_LayerLayoutPointer = (LayerHeader*)m_LayerLayoutBuffer;
+		m_LayerLayoutPointer = m_LayerLayoutPointer->Next();
 
 		unsigned layoutIndex = 1;
 
@@ -493,11 +463,11 @@ namespace TNNT
 		{
 
 			//No function for the inputlayer, which means that the function corresponding to any other layer is located at layer - 1.
-			m_Functions.FeedForwardCallBackFunctions[layoutIndex - 1].f(this);
+			m_LayerLayoutPointer->FeedForward(this);
 
 
 			m_LayerLayoutPosition++;
-
+			m_LayerLayoutPointer = m_LayerLayoutPointer->Next();
 			layoutIndex++;
 
 		}
@@ -509,7 +479,9 @@ namespace TNNT
 
 		unsigned lastLayer = m_LayerLayoutCount - 1;
 
-
+		m_LayerLayoutPointer = (LayerHeader*)m_LayerLayoutBuffer;
+		m_LayerLayoutPointer = m_LayerLayoutPointer->Prev();
+		m_LayerLayoutPointer = m_LayerLayoutPointer->Prev();
 
 		m_LayerLayoutPosition = lastLayer;
 
@@ -519,13 +491,13 @@ namespace TNNT
 		while (reveresLayoutIndex < lastLayer)
 		{
 
-			m_Functions.BackPropegateCallBackFunctionsZ[(lastLayer - 1) - reveresLayoutIndex].f(this);
+			m_LayerLayoutPointer->BackPropagateZ(this);
 
 
-			m_Functions.BackPropegateCallBackFunctionsBW[(lastLayer - 1) - reveresLayoutIndex].f(this);
+			m_LayerLayoutPointer->BackPropagateBW(this);
 
 			m_LayerLayoutPosition--;
-
+			m_LayerLayoutPointer = m_LayerLayoutPointer->Prev();
 
 			reveresLayoutIndex++;
 		}
@@ -539,6 +511,8 @@ namespace TNNT
 		m_LayerLayoutPosition = 1;
 
 
+		m_LayerLayoutPointer = (LayerHeader*)m_LayerLayoutBuffer;
+		m_LayerLayoutPointer = m_LayerLayoutPointer->Next();
 
 		unsigned layoutIndex = 1;
 
@@ -546,7 +520,7 @@ namespace TNNT
 		{
 
 
-			m_Functions.RegularizationFunctions[layoutIndex - 1].f(this);
+			m_LayerLayoutPointer->RegularizationFunctions(this);
 
 
 
@@ -554,7 +528,7 @@ namespace TNNT
 
 
 			m_LayerLayoutPosition++;
-
+			m_LayerLayoutPointer = m_LayerLayoutPointer->Next();
 
 
 
@@ -568,7 +542,8 @@ namespace TNNT
 
 		m_LayerLayoutPosition = 1;
 
-
+		m_LayerLayoutPointer = (LayerHeader*)m_LayerLayoutBuffer;
+		m_LayerLayoutPointer = m_LayerLayoutPointer->Next();
 
 		unsigned layoutIndex = 1;
 
@@ -576,7 +551,7 @@ namespace TNNT
 		{
 
 
-			m_Functions.TrainingFunctions[layoutIndex - 1].f(this);
+			m_LayerLayoutPointer->TrainingFunctions(this);
 
 
 
@@ -584,7 +559,7 @@ namespace TNNT
 
 
 			m_LayerLayoutPosition++;
-
+			m_LayerLayoutPointer = m_LayerLayoutPointer->Next();
 
 
 
@@ -747,7 +722,7 @@ namespace TNNT
 
 			FeedForward();
 
-			m_Functions.CostFunction.f(this);
+			m_CostFunction(this);
 
 
 			checkIndex++;

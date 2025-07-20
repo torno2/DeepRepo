@@ -1,42 +1,190 @@
 #pragma once
 
-#include "NeuralNetworkCustomVariables.h"
+
 namespace TNNT
 {
+	class NetworkPrototype;
 
-	class NetworkPrototype2;
+	typedef float (*NeuronFunc)(float);
+	typedef void (*NetworkRelayFunction)(NetworkPrototype*);
 
-	class FCLayer
+
+
+	struct LayerHeader
 	{
-	public:
-		float* A			=nullptr;
-		float* Z			=nullptr;
-		float* Weights		=nullptr;
-		float* Biases		=nullptr;
 
-		float* dZ			=nullptr;
-		float* dWeights		=nullptr;
-		float* dBiases		=nullptr;
-		float* TempWeights	=nullptr;
-		float* TempBiases	=nullptr;
+		void (*Setup)(char*, unsigned alignment);
+		//SetupFunction Setup;
+
+		NeuronFunc NeuronFunction;
+		NeuronFunc MeuronFunctionDerivative;
+
+		NetworkRelayFunction FeedForward;
+		NetworkRelayFunction BackPropagateZ;
+		NetworkRelayFunction BackPropagateBW;
+
+		NetworkRelayFunction TrainingFunctions;
+
+		NetworkRelayFunction RegularizationFunctions;
+
+		float* A;
+
+		float* Z;
+		float* dZ;
 
 
-		unsigned NodesCount = 30;
-		unsigned ZCount = 30;
-		unsigned BiasesCount = 30;
-		unsigned WeightsCount = 30*30;
 
-		float LearningRate = 0.001f;
-		float RegularizationConstant = 0.0005f;
 
-		float NeuronFunction(float z);
-		float NeuronFunctionDerivative(float z);
-		void FeedForward(NetworkPrototype2* n);
-		void BackPropegateZ(NetworkPrototype2* n);
-		void BackPropegateBW(NetworkPrototype2* n);
+		//unsigned long long storageSize;
+		unsigned long long parentSize;
 
-		void Regularize(NetworkPrototype2* n);
-		void Train(NetworkPrototype2* n);
+		unsigned NodesCount;
+		unsigned ZCount;
+
+
+		float LearningRate = 0.01f;
+		float RegularizationConstant = 0.001f;
+
+
+	};
+
+
+
+
+
+	struct FullyConnectedLayer
+	{
+
+
+
+		float* Z;
+		float* dZ;
+
+		float* A;
+
+		float* Weights;
+		float* Biases;
+
+
+		unsigned NodesCount;
+
+		unsigned BiasesCount;
+		unsigned WeightsCount;
+
+
+
+
+	};
+
+	void FeedForward_FullyConnected();
+
+	void FeedForward_BackPropegation_FullyConnected();
+	void BackPropegation_Z_FullyConnected();
+	void BackPropegation_BW_FullyConnected();
+
+	struct FullyConnectedLayerBP
+	{
+
+
+
+		float* Z;
+		float* dZ;
+
+		float* A;
+
+		float* Weights;
+		float* Biases;
+
+		float* TempWeights;
+		float* TempBiases;
+
+		float* dWeights;
+		float* dBiases;
+
+		float* WeightsTranspose;
+		unsigned Tm;
+
+		unsigned NodesCount;
+
+		unsigned BiasesCount;
+		unsigned WeightsCount;
+
+
+
+
+
+	};
+
+	struct FullyConnectedLayerTR
+	{
+
+
+
+		float* Z;
+		float* dZ;
+
+		float* A;
+
+		float* Weights;
+		float* Biases;
+
+		float* TempWeights;
+		float* TempBiases;
+
+		float* dWeights;
+		float* dBiases;
+
+		float* WeightsTranspose;
+		unsigned Tm;
+
+		unsigned NodesCount;
+
+		unsigned BiasesCount;
+		unsigned WeightsCount;
+
+
+
+
+		void Setup(char* storage);
+
+
+
+		void FeedForward(FullyConnectedLayer* n);
+
+
+
+		void ResetTranspose();
+
+	};
+
+
+
+
+
+
+
+
+
+
+
+
+
+	// Example of Convolutional Layer
+	struct ConvolutionalLayer
+	{
+		LayerHeader header;
+
+		// --- Your layer-specific data ---
+
+		unsigned* kerDim;
+		unsigned* Stride;
+		unsigned* Padding;
+		unsigned kerDimCount;
+
+		unsigned ChannelsIn;
+		unsigned ChannelsOut;
+
+
 	};
 
 

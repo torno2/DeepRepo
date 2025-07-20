@@ -17,7 +17,8 @@ namespace Math{
 	//Needs z arguments to be passed into neural-network
 	float CrossEntropyCostDerivative(float z,float a, float y);
 
-
+	size_t LCM(size_t a, size_t b);
+	size_t GCD(size_t a, size_t b);
 	
 	float Dot(const float* a, const float* b, size_t count);
 

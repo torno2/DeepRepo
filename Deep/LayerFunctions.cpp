@@ -11,38 +11,36 @@ namespace TNNT
 
 			//REMINDER: Weights, Biases and Z - arrays corresponding to layer n, are all saved on the n-1 spot in the m_WorkloadLayout array, but not in the m_LayerLayout array.
 
-			LayerLayout prevLayer = n->m_LayerLayout[n->m_LayerLayoutPosition - 1];
-			LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
+			LayerHeader* currentLayer = n->m_LayerLayoutPointer;
+			LayerHeader* prevLayer = currentLayer->Prev();
 
-
-			float* weights;
 
 			unsigned layerIndex = 0;
-			while (layerIndex < currentLayer.NodesCount)
+			while (layerIndex < currentLayer->NodesCount)
 			{
-				float weightedSum = 0;
+				//float weightedSum = 0;
 
 
 
 				//unsigned prevIndex = 0;
-				//while (prevIndex < prevLayer.NodesCount)
+				//while (prevIndex < prevLayer->NodesCount)
 				//{
 
 
-				//	float prevA = prevLayer.A[prevIndex];
-				//	float weight = currentLayer.Weights[prevLayer.NodesCount * layerIndex + prevIndex];
+				//	float prevA = prevLayer->A[prevIndex];
+				//	float weight = currentLayer->Weights[prevLayer->NodesCount * layerIndex + prevIndex];
 				//	weightedSum += weight * prevA;
 
 				//	prevIndex++;
 				//}
 
 
-				//currentLayer.Z[layerIndex] = weightedSum + currentLayer.Biases[layerIndex];
+				//currentLayer->Z[layerIndex] = weightedSum + currentLayer->Biases[layerIndex];
 
 
-				currentLayer.Z[layerIndex] = Math::Dot(&currentLayer.Weights[prevLayer.NodesCount * layerIndex], prevLayer.A, prevLayer.NodesCount) + currentLayer.Biases[layerIndex];
+				currentLayer->Z[layerIndex] = Math::Dot(&currentLayer->Weights[prevLayer->NodesCount * layerIndex], prevLayer->A, prevLayer->NodesCount) + currentLayer->Biases[layerIndex];
 
-				currentLayer.A[layerIndex] = n->m_Functions.NeuronFunctions[n->m_LayerLayoutPosition - 1].f(currentLayer.Z[layerIndex]);
+				currentLayer->A[layerIndex] = currentLayer->NeuronFunction(currentLayer->Z[layerIndex]);
 
 
 				layerIndex++;
@@ -56,25 +54,25 @@ namespace TNNT
 		{
 
 
-			//REMINDER: Weights, Biases and Z - arrays corresponding to layer n, are all saved on the n-1 spot in the m_WorkloadLayout array, but not in the m_LayerLayout array.
+			//REMINDER: Weights, Biases and Z - arrays corresponding to layer n, are all saved on the n-1 spot in the m_WorkloadLayout array, but not in the m_LayerLayout array->
 
 
-			LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
-			LayerLayout latterLayer = n->m_LayerLayout[n->m_LayerLayoutPosition + 1];
+			LayerHeader* currentLayer = n->m_LayerLayoutPointer;
+			LayerHeader* latterLayer = currentLayer->Next();
 
 
 
 
 			unsigned layerIndex = 0;
-			while (layerIndex < currentLayer.NodesCount)
+			while (layerIndex < currentLayer->NodesCount)
 			{
 
 				//float errorSum = 0;
 				//unsigned latterLayerIndex = 0;
-				//while (latterLayerIndex < latterLayer.NodesCount)
+				//while (latterLayerIndex < latterLayer->NodesCount)
 				//{
-				//	float latterWeight = latterLayer.Weights[currentLayer.NodesCount * latterLayerIndex + layerIndex];
-				//	float latterDZ = latterLayer.dZ[latterLayerIndex];
+				//	float latterWeight = latterLayer->Weights[currentLayer->NodesCount * latterLayerIndex + layerIndex];
+				//	float latterDZ = latterLayer->dZ[latterLayerIndex];
 
 				//	errorSum += latterWeight * latterDZ;
 
@@ -85,11 +83,11 @@ namespace TNNT
 
 
 
-				float dAdZ = n->m_Functions.NeuronFunctionsDerivatives[n->m_LayerLayoutPosition - 1].f(currentLayer.Z[layerIndex]);
+				float dAdZ = currentLayer->MeuronFunctionDerivative(currentLayer->Z[layerIndex]);
 
-				//currentLayer.dZ[layerIndex] = errorSum * dAdZ;
+				//currentLayer->dZ[layerIndex] = errorSum * dAdZ;
 
-				currentLayer.dZ[layerIndex] = Math::Dot(&latterLayer.WeightsTranspose[latterLayer.NodesCount * layerIndex], latterLayer.dZ, latterLayer.NodesCount) * dAdZ;
+				currentLayer->dZ[layerIndex] = Math::Dot(&latterLayer->WeightsTranspose[latterLayer->NodesCount * layerIndex], latterLayer->dZ, latterLayer->NodesCount) * dAdZ;
 
 
 				layerIndex++;
@@ -101,38 +99,36 @@ namespace TNNT
 		{
 
 
-			//REMINDER: Weights, Biases and Z - arrays corresponding to layer n, are all saved on the n-1 spot in the m_WorkloadLayout array, but not in the m_LayerLayout array.
+			//REMINDER: Weights, Biases and Z - arrays corresponding to layer n, are all saved on the n-1 spot in the m_WorkloadLayout array, but not in the m_LayerLayout array->
 
-
-			LayerLayout prevLayer = n->m_LayerLayout[n->m_LayerLayoutPosition - 1];
-			LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
-
+			LayerHeader* currentLayer = n->m_LayerLayoutPointer;
+			LayerHeader* prevLayer = currentLayer->Prev();
 
 			unsigned layerIndex = 0;
-			while (layerIndex < currentLayer.NodesCount)
+			while (layerIndex < currentLayer->NodesCount)
 			{
 
 
-				const float dz = currentLayer.dZ[layerIndex];
+				const float dz = currentLayer->dZ[layerIndex];
 
-				currentLayer.dBiases[layerIndex] = dz;
+				currentLayer->dBiases[layerIndex] = dz;
 
 
 				
-				memcpy(&currentLayer.dWeights[prevLayer.NodesCount * layerIndex], prevLayer.A, prevLayer.NodesCount * sizeof(float));
-				Math::ScalarMult(&currentLayer.dWeights[prevLayer.NodesCount * layerIndex], dz ,prevLayer.NodesCount);
+				memcpy(&currentLayer->dWeights[prevLayer->NodesCount * layerIndex], prevLayer->A, prevLayer->NodesCount * sizeof(float));
+				Math::ScalarMult(&currentLayer->dWeights[prevLayer->NodesCount * layerIndex], dz ,prevLayer->NodesCount);
 
 				//unsigned prevLayerIndex = 0;
-				//while (prevLayerIndex < prevLayer.NodesCount)
+				//while (prevLayerIndex < prevLayer->NodesCount)
 				//{
 
 
 
-				//	float a = prevLayer.A[prevLayerIndex];
+				//	float a = prevLayer->A[prevLayerIndex];
 				//	float dw = a * dz;
 
 
-				//	currentLayer.dWeights[prevLayer.NodesCount * layerIndex + prevLayerIndex] = dw;
+				//	currentLayer->dWeights[prevLayer->NodesCount * layerIndex + prevLayerIndex] = dw;
 
 
 
@@ -148,259 +144,259 @@ namespace TNNT
 		
 
 
-		void ConvolutionLayerFeedForward(NetworkPrototype* n)
-		{
-			
-			
-
-			LayerLayout prevLayer = n->m_LayerLayout[n->m_LayerLayoutPosition-1];
-			LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
-
-			//Used with the "TensorOverlay" class to navigate the node array of prevLayer as an N-dimentional box.
-			unsigned* posBuffer = new unsigned[currentLayer.KerDimCount];
-			unsigned* stridePosBuffer = new unsigned[currentLayer.KerDimCount];
-			
-
-
-
-			//Node count of individual feature maps
-			unsigned featureMapNodeCount = currentLayer.NodesCount / currentLayer.SubLayerCount;
-			unsigned featureMapWeightsCount = currentLayer.WeightsCount / currentLayer.SubLayerCount;
-			unsigned featureMapWeightLinesCount = featureMapWeightsCount / currentLayer.KerDim[0];
-			unsigned featureMapBiasesCount = currentLayer.BiasesCount / currentLayer.SubLayerCount;
+		//void ConvolutionLayerFeedForward(NetworkPrototype* n)
+		//{
+		//	
+		//	
+
+		//	LayerLayout prevLayer = n->m_LayerLayout[n->m_LayerLayoutPosition-1];
+		//	LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
+
+		//	//Used with the "TensorOverlay" class to navigate the node array of prevLayer as an N-dimentional box.
+		//	unsigned* posBuffer = new unsigned[currentLayer->KerDimCount];
+		//	unsigned* stridePosBuffer = new unsigned[currentLayer->KerDimCount];
+		//	
+
+
+
+		//	//Node count of individual feature maps
+		//	unsigned featureMapNodeCount = currentLayer->NodesCount / currentLayer->SubLayerCount;
+		//	unsigned featureMapWeightsCount = currentLayer->WeightsCount / currentLayer->SubLayerCount;
+		//	unsigned featureMapWeightLinesCount = featureMapWeightsCount / currentLayer->KerDim[0];
+		//	unsigned featureMapBiasesCount = currentLayer->BiasesCount / currentLayer->SubLayerCount;
 
-			unsigned featureMap = 0;
-			while (featureMap < currentLayer.SubLayerCount)
-			{
+		//	unsigned featureMap = 0;
+		//	while (featureMap < currentLayer->SubLayerCount)
+		//	{
 
-				memset(posBuffer, 0, currentLayer.KerDimCount*sizeof(unsigned));
-				memset(stridePosBuffer, 0, currentLayer.KerDimCount * sizeof(unsigned));
+		//		memset(posBuffer, 0, currentLayer->KerDimCount*sizeof(unsigned));
+		//		memset(stridePosBuffer, 0, currentLayer->KerDimCount * sizeof(unsigned));
 
 
-				float* A = currentLayer.A + featureMap * featureMapNodeCount;
-				float* Z = currentLayer.Z + featureMap * featureMapNodeCount;
-				float* weights = currentLayer.Weights + featureMap * featureMapWeightsCount;
-				float* biases = currentLayer.Biases + featureMap * featureMapBiasesCount;
+		//		float* A = currentLayer->A + featureMap * featureMapNodeCount;
+		//		float* Z = currentLayer->Z + featureMap * featureMapNodeCount;
+		//		float* weights = currentLayer->Weights + featureMap * featureMapWeightsCount;
+		//		float* biases = currentLayer->Biases + featureMap * featureMapBiasesCount;
 
-				TensorOverlay prevA(prevLayer.A, prevLayer.NodesCount, prevLayer.LayerDim, prevLayer.LayerDimCount);
-				
-				unsigned featureMapIndex = 0;
-				while (featureMapIndex < featureMapNodeCount)
-				{
-					float weightedSum = 0;
+		//		TensorOverlay prevA(prevLayer.A, prevLayer.NodesCount, prevLayer.LayerDim, prevLayer.LayerDimCount);
+		//		
+		//		unsigned featureMapIndex = 0;
+		//		while (featureMapIndex < featureMapNodeCount)
+		//		{
+		//			float weightedSum = 0;
 
-					
-					unsigned kerLine = 0;
-					while (kerLine < featureMapWeightLinesCount)
-					{
-						
-						float* aLine = prevA.At(posBuffer);
-						unsigned kerLineIndex = 0;
-						while (kerLineIndex < currentLayer.KerDim[0])
-						{
-							float weight = weights[kerLineIndex + kerLine * currentLayer.KerDim[0]];
-							float a = aLine[kerLineIndex];
+		//			
+		//			unsigned kerLine = 0;
+		//			while (kerLine < featureMapWeightLinesCount)
+		//			{
+		//				
+		//				float* aLine = prevA.At(posBuffer);
+		//				unsigned kerLineIndex = 0;
+		//				while (kerLineIndex < currentLayer->KerDim[0])
+		//				{
+		//					float weight = weights[kerLineIndex + kerLine * currentLayer->KerDim[0]];
+		//					float a = aLine[kerLineIndex];
 
-							weightedSum += weight * a;
+		//					weightedSum += weight * a;
 
-							kerLineIndex++;
-						}
+		//					kerLineIndex++;
+		//				}
 
-						kerLine++;
-						
+		//				kerLine++;
+		//				
 
-						unsigned kerDimMult = 1;
-						unsigned kerDimIndex = 1;
-						while (kerDimIndex < currentLayer.KerDimCount)
-						{
-							if (kerDimIndex == 1)
-							{
-								posBuffer[1]++;
-							}
-							
-							if (  ((posBuffer[kerDimIndex] - stridePosBuffer[kerDimIndex])) > currentLayer.KerDim[kerDimIndex] )
-							{
-								posBuffer[kerDimIndex]++;
-								posBuffer[kerDimIndex - 1] = 0 + stridePosBuffer[kerDimIndex - 1];
-								kerDimMult *= currentLayer.KerDim[kerDimIndex];
+		//				unsigned kerDimMult = 1;
+		//				unsigned kerDimIndex = 1;
+		//				while (kerDimIndex < currentLayer->KerDimCount)
+		//				{
+		//					if (kerDimIndex == 1)
+		//					{
+		//						posBuffer[1]++;
+		//					}
+		//					
+		//					if (  ((posBuffer[kerDimIndex] - stridePosBuffer[kerDimIndex])) > currentLayer->KerDim[kerDimIndex] )
+		//					{
+		//						posBuffer[kerDimIndex]++;
+		//						posBuffer[kerDimIndex - 1] = 0 + stridePosBuffer[kerDimIndex - 1];
+		//						kerDimMult *= currentLayer->KerDim[kerDimIndex];
 
-							}
+		//					}
 
-							else
-							{
-								break;
-							}
-							kerDimIndex++;
-						}
-						
+		//					else
+		//					{
+		//						break;
+		//					}
+		//					kerDimIndex++;
+		//				}
+		//				
 
-						
-					}
-					
+		//				
+		//			}
+		//			
 
-					stridePosBuffer[0] += currentLayer.Stride[0];
-					unsigned kerDimIndex = 0;
-					while(kerDimIndex < currentLayer.KerDimCount-1)
-					{
+		//			stridePosBuffer[0] += currentLayer->Stride[0];
+		//			unsigned kerDimIndex = 0;
+		//			while(kerDimIndex < currentLayer->KerDimCount-1)
+		//			{
 
-						if ( (stridePosBuffer[kerDimIndex] + (currentLayer.KerDim[kerDimIndex]-1)) >= (prevLayer.LayerDim[kerDimIndex ]))
-						{
+		//				if ( (stridePosBuffer[kerDimIndex] + (currentLayer->KerDim[kerDimIndex]-1)) >= (prevLayer.LayerDim[kerDimIndex ]))
+		//				{
 
-							stridePosBuffer[kerDimIndex] = 0;
-							stridePosBuffer[kerDimIndex + 1] += currentLayer.Stride[kerDimIndex + 1];
+		//					stridePosBuffer[kerDimIndex] = 0;
+		//					stridePosBuffer[kerDimIndex + 1] += currentLayer->Stride[kerDimIndex + 1];
 
 
-						}
+		//				}
 
-						posBuffer[kerDimIndex] = 0 + stridePosBuffer[kerDimIndex];
-						posBuffer[kerDimIndex + 1] = 0 + stridePosBuffer[kerDimIndex + 1];
+		//				posBuffer[kerDimIndex] = 0 + stridePosBuffer[kerDimIndex];
+		//				posBuffer[kerDimIndex + 1] = 0 + stridePosBuffer[kerDimIndex + 1];
 
-						kerDimIndex++;
-					}
-					
-					
+		//				kerDimIndex++;
+		//			}
+		//			
+		//			
 
 
-					
+		//			
 
 
-					weightedSum += *biases;
+		//			weightedSum += *biases;
 
-					float z = weightedSum;
-					Z[featureMapIndex] = z;
-					float a = n->m_Functions.NeuronFunctions[n->m_LayerLayoutPosition - 1].f(z);
-					A[featureMapIndex] = a;
+		//			float z = weightedSum;
+		//			Z[featureMapIndex] = z;
+		//			float a = n->m_Functions.NeuronFunctions[n->m_LayerLayoutPosition - 1].f(z);
+		//			A[featureMapIndex] = a;
 
-					
-					featureMapIndex++;
-				}
+		//			
+		//			featureMapIndex++;
+		//		}
 
-				
+		//		
 
-				featureMap++;
-			}
+		//		featureMap++;
+		//	}
 
 
-			delete[] posBuffer;
-			delete[] stridePosBuffer;
+		//	delete[] posBuffer;
+		//	delete[] stridePosBuffer;
 
 
-		}
+		//}
 
-		void ConvolutionLayerBackpropegateZ(NetworkPrototype* n)
-		{
-			LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
-			LayerLayout latterLayer = n->m_LayerLayout[n->m_LayerLayoutPosition+1];
+		//void ConvolutionLayerBackpropegateZ(NetworkPrototype* n)
+		//{
+		//	LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
+		//	LayerLayout latterLayer = n->m_LayerLayout[n->m_LayerLayoutPosition+1];
 
-			//Used with the "TensorOverlay" class to navigate the node array of currentLayer as an N-dimentional box.
-			unsigned* posBuffer = new unsigned[latterLayer.KerDimCount];
-			unsigned* stridePosBuffer = new unsigned[latterLayer.KerDimCount];
+		//	//Used with the "TensorOverlay" class to navigate the node array of currentLayer as an N-dimentional box.
+		//	unsigned* posBuffer = new unsigned[latterLayer.KerDimCount];
+		//	unsigned* stridePosBuffer = new unsigned[latterLayer.KerDimCount];
 
-			//Set the delta weights array
-			memset(currentLayer.dZ, 0.0, currentLayer.ZCount * sizeof(float));
+		//	//Set the delta weights array
+		//	memset(currentLayer->dZ, 0.0, currentLayer->ZCount * sizeof(float));
 
 
-			//Node count of individual feature maps
-			unsigned featureMapNodeCount = latterLayer.NodesCount / latterLayer.SubLayerCount;
-			unsigned featureMapWeightsCount = latterLayer.WeightsCount / latterLayer.SubLayerCount;
-			unsigned featureMapWeightLinesCount = featureMapWeightsCount / latterLayer.KerDim[0];
-			unsigned featureMapBiasesCount = latterLayer.BiasesCount / latterLayer.SubLayerCount;
+		//	//Node count of individual feature maps
+		//	unsigned featureMapNodeCount = latterLayer.NodesCount / latterLayer.SubLayerCount;
+		//	unsigned featureMapWeightsCount = latterLayer.WeightsCount / latterLayer.SubLayerCount;
+		//	unsigned featureMapWeightLinesCount = featureMapWeightsCount / latterLayer.KerDim[0];
+		//	unsigned featureMapBiasesCount = latterLayer.BiasesCount / latterLayer.SubLayerCount;
 
-			unsigned featureMap = 0;
-			while (featureMap < latterLayer.SubLayerCount)
-			{
+		//	unsigned featureMap = 0;
+		//	while (featureMap < latterLayer.SubLayerCount)
+		//	{
 
-				memset(posBuffer, 0, latterLayer.KerDimCount * sizeof(unsigned));
-				memset(stridePosBuffer, 0, latterLayer.KerDimCount * sizeof(unsigned));
+		//		memset(posBuffer, 0, latterLayer.KerDimCount * sizeof(unsigned));
+		//		memset(stridePosBuffer, 0, latterLayer.KerDimCount * sizeof(unsigned));
 
-				
-				
-				float* latterDZ = latterLayer.dZ + featureMap * featureMapNodeCount;
-				float* weights = latterLayer.Weights + featureMap * featureMapWeightsCount;
-				
+		//		
+		//		
+		//		float* latterDZ = latterLayer.dZ + featureMap * featureMapNodeCount;
+		//		float* weights = latterLayer.Weights + featureMap * featureMapWeightsCount;
+		//		
 
-				TensorOverlay dZ(currentLayer.dZ, currentLayer.ZCount, currentLayer.LayerDim, currentLayer.LayerDimCount);
-				TensorOverlay Z(currentLayer.Z, currentLayer.ZCount, currentLayer.LayerDim, currentLayer.LayerDimCount);
+		//		TensorOverlay dZ(currentLayer->dZ, currentLayer->ZCount, currentLayer->LayerDim, currentLayer->LayerDimCount);
+		//		TensorOverlay Z(currentLayer->Z, currentLayer->ZCount, currentLayer->LayerDim, currentLayer->LayerDimCount);
 
-				unsigned featureMapIndex = 0;
-				while (featureMapIndex < featureMapNodeCount)
-				{
+		//		unsigned featureMapIndex = 0;
+		//		while (featureMapIndex < featureMapNodeCount)
+		//		{
 
-					float latterdz = latterDZ[featureMapIndex];
-					
+		//			float latterdz = latterDZ[featureMapIndex];
+		//			
 
 
-					unsigned kerLine = 0;
-					while (kerLine < featureMapWeightLinesCount)
-					{
+		//			unsigned kerLine = 0;
+		//			while (kerLine < featureMapWeightLinesCount)
+		//			{
 
-						float* dZLine = dZ.At(posBuffer);
-						float* ZLine = Z.At(posBuffer);
-						unsigned kerLineIndex = 0;
-						while (kerLineIndex < latterLayer.KerDim[0])
-						{
-							
-							
-							float weight = weights[kerLineIndex + kerLine * latterLayer.KerDim[0]];
-							float dAdZ = n->m_Functions.NeuronFunctionsDerivatives[n->m_LayerLayoutPosition - 1].f(ZLine[kerLineIndex]);
+		//				float* dZLine = dZ.At(posBuffer);
+		//				float* ZLine = Z.At(posBuffer);
+		//				unsigned kerLineIndex = 0;
+		//				while (kerLineIndex < latterLayer.KerDim[0])
+		//				{
+		//					
+		//					
+		//					float weight = weights[kerLineIndex + kerLine * latterLayer.KerDim[0]];
+		//					float dAdZ = n->m_Functions.NeuronFunctionsDerivatives[n->m_LayerLayoutPosition - 1].f(ZLine[kerLineIndex]);
 
-							dZLine[kerLineIndex] += dAdZ *weight * latterdz;
+		//					dZLine[kerLineIndex] += dAdZ *weight * latterdz;
 
-							kerLineIndex++;
-						}
+		//					kerLineIndex++;
+		//				}
 
-						kerLine++;
+		//				kerLine++;
 
 
-						unsigned kerDimMult = 1;
-						unsigned kerDimIndex = 1;
-						while (kerDimIndex < latterLayer.KerDimCount)
-						{
-							if (kerDimIndex == 1)
-							{
-								posBuffer[1]++;
-							}
+		//				unsigned kerDimMult = 1;
+		//				unsigned kerDimIndex = 1;
+		//				while (kerDimIndex < latterLayer.KerDimCount)
+		//				{
+		//					if (kerDimIndex == 1)
+		//					{
+		//						posBuffer[1]++;
+		//					}
 
-							if (((posBuffer[kerDimIndex] - stridePosBuffer[kerDimIndex])) > latterLayer.KerDim[kerDimIndex])
-							{
-								posBuffer[kerDimIndex]++;
-								posBuffer[kerDimIndex - 1] = 0 + stridePosBuffer[kerDimIndex - 1];
-								kerDimMult *= latterLayer.KerDim[kerDimIndex];
+		//					if (((posBuffer[kerDimIndex] - stridePosBuffer[kerDimIndex])) > latterLayer.KerDim[kerDimIndex])
+		//					{
+		//						posBuffer[kerDimIndex]++;
+		//						posBuffer[kerDimIndex - 1] = 0 + stridePosBuffer[kerDimIndex - 1];
+		//						kerDimMult *= latterLayer.KerDim[kerDimIndex];
 
-							}
+		//					}
 
-							else
-							{
-								break;
-							}
-							kerDimIndex++;
-						}
+		//					else
+		//					{
+		//						break;
+		//					}
+		//					kerDimIndex++;
+		//				}
 
 
 
-					}
+		//			}
 
 
-					stridePosBuffer[0] += latterLayer.Stride[0];
-					unsigned kerDimIndex = 0;
-					while (kerDimIndex < latterLayer.KerDimCount - 1)
-					{
+		//			stridePosBuffer[0] += latterLayer.Stride[0];
+		//			unsigned kerDimIndex = 0;
+		//			while (kerDimIndex < latterLayer.KerDimCount - 1)
+		//			{
 
-						if ((stridePosBuffer[kerDimIndex] + (latterLayer.KerDim[kerDimIndex] - 1)) >= (currentLayer.LayerDim[kerDimIndex]))
-						{
+		//				if ((stridePosBuffer[kerDimIndex] + (latterLayer.KerDim[kerDimIndex] - 1)) >= (currentLayer->LayerDim[kerDimIndex]))
+		//				{
 
-							stridePosBuffer[kerDimIndex] = 0;
-							stridePosBuffer[kerDimIndex + 1] += latterLayer.Stride[kerDimIndex + 1];
+		//					stridePosBuffer[kerDimIndex] = 0;
+		//					stridePosBuffer[kerDimIndex + 1] += latterLayer.Stride[kerDimIndex + 1];
 
 
 
-						}
+		//				}
 
-						posBuffer[kerDimIndex] = 0 + stridePosBuffer[kerDimIndex];
-						posBuffer[kerDimIndex + 1] = 0 + stridePosBuffer[kerDimIndex + 1];
+		//				posBuffer[kerDimIndex] = 0 + stridePosBuffer[kerDimIndex];
+		//				posBuffer[kerDimIndex + 1] = 0 + stridePosBuffer[kerDimIndex + 1];
 
-						kerDimIndex++;
-					}
+		//				kerDimIndex++;
+		//			}
 
 
 
@@ -413,132 +409,132 @@ namespace TNNT
 
 
 
-					featureMapIndex++;
-				}
+		//			featureMapIndex++;
+		//		}
 
 
 
-				featureMap++;
-			}
+		//		featureMap++;
+		//	}
 
 
-			delete[] posBuffer;
-			delete[] stridePosBuffer;
-		}
+		//	delete[] posBuffer;
+		//	delete[] stridePosBuffer;
+		//}
 
-		void ConvolutionLayerBackpropegateBW(NetworkPrototype* n)
-		{
-			LayerLayout prevLayer = n->m_LayerLayout[n->m_LayerLayoutPosition - 1];
-			LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
+		//void ConvolutionLayerBackpropegateBW(NetworkPrototype* n)
+		//{
+		//	LayerLayout prevLayer = n->m_LayerLayout[n->m_LayerLayoutPosition - 1];
+		//	LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
 
-			//Used with the "TensorOverlay" class to navigate the node array of prevLayer as an N-dimentional box.
-			unsigned* posBuffer = new unsigned[currentLayer.KerDimCount];
-			unsigned* stridePosBuffer = new unsigned[currentLayer.KerDimCount];
+		//	//Used with the "TensorOverlay" class to navigate the node array of prevLayer as an N-dimentional box.
+		//	unsigned* posBuffer = new unsigned[currentLayer->KerDimCount];
+		//	unsigned* stridePosBuffer = new unsigned[currentLayer->KerDimCount];
 
-			//Set the delta weights array
-			memset(currentLayer.dWeights, 0.0, currentLayer.WeightsCount*sizeof(float));
-			memset(currentLayer.dBiases, 0.0, currentLayer.BiasesCount*sizeof(float));
+		//	//Set the delta weights array
+		//	memset(currentLayer->dWeights, 0.0, currentLayer->WeightsCount*sizeof(float));
+		//	memset(currentLayer->dBiases, 0.0, currentLayer->BiasesCount*sizeof(float));
 
 
-			//Node count of individual feature maps
-			unsigned featureMapNodeCount = currentLayer.NodesCount / currentLayer.SubLayerCount;
-			unsigned featureMapWeightsCount = currentLayer.WeightsCount / currentLayer.SubLayerCount;
-			unsigned featureMapWeightLinesCount = featureMapWeightsCount / currentLayer.KerDim[0];
-			unsigned featureMapBiasesCount = currentLayer.BiasesCount / currentLayer.SubLayerCount;
+		//	//Node count of individual feature maps
+		//	unsigned featureMapNodeCount = currentLayer->NodesCount / currentLayer->SubLayerCount;
+		//	unsigned featureMapWeightsCount = currentLayer->WeightsCount / currentLayer->SubLayerCount;
+		//	unsigned featureMapWeightLinesCount = featureMapWeightsCount / currentLayer->KerDim[0];
+		//	unsigned featureMapBiasesCount = currentLayer->BiasesCount / currentLayer->SubLayerCount;
 
-			unsigned featureMap = 0;
-			while (featureMap < currentLayer.SubLayerCount)
-			{
-				
-				memset(posBuffer, 0, currentLayer.KerDimCount*sizeof(unsigned));
-				memset(stridePosBuffer, 0, currentLayer.KerDimCount*sizeof(unsigned));
+		//	unsigned featureMap = 0;
+		//	while (featureMap < currentLayer->SubLayerCount)
+		//	{
+		//		
+		//		memset(posBuffer, 0, currentLayer->KerDimCount*sizeof(unsigned));
+		//		memset(stridePosBuffer, 0, currentLayer->KerDimCount*sizeof(unsigned));
 
-				float* dZ = currentLayer.dZ + featureMap * featureMapNodeCount;
-				float* dweights = currentLayer.dWeights + featureMap * featureMapWeightsCount;
-				float* dbiases = currentLayer.dBiases + featureMap * featureMapBiasesCount;
+		//		float* dZ = currentLayer->dZ + featureMap * featureMapNodeCount;
+		//		float* dweights = currentLayer->dWeights + featureMap * featureMapWeightsCount;
+		//		float* dbiases = currentLayer->dBiases + featureMap * featureMapBiasesCount;
 
-				TensorOverlay prevA(prevLayer.A, prevLayer.NodesCount, prevLayer.LayerDim, prevLayer.LayerDimCount);
+		//		TensorOverlay prevA(prevLayer.A, prevLayer.NodesCount, prevLayer.LayerDim, prevLayer.LayerDimCount);
 
-				unsigned featureMapIndex = 0;
-				while (featureMapIndex < featureMapNodeCount)
-				{
+		//		unsigned featureMapIndex = 0;
+		//		while (featureMapIndex < featureMapNodeCount)
+		//		{
 
-					float deltaZ = dZ[featureMapIndex];
-					*dbiases += deltaZ;
-					
-					
-					
+		//			float deltaZ = dZ[featureMapIndex];
+		//			*dbiases += deltaZ;
+		//			
+		//			
+		//			
 
-					unsigned kerLine = 0;
-					while (kerLine < featureMapWeightLinesCount)
-					{
+		//			unsigned kerLine = 0;
+		//			while (kerLine < featureMapWeightLinesCount)
+		//			{
 
-						float* aLine = prevA.At(posBuffer);
-						unsigned kerLineIndex = 0;
-						while (kerLineIndex < currentLayer.KerDim[0])
-						{
-							float a = aLine[kerLineIndex];
+		//				float* aLine = prevA.At(posBuffer);
+		//				unsigned kerLineIndex = 0;
+		//				while (kerLineIndex < currentLayer->KerDim[0])
+		//				{
+		//					float a = aLine[kerLineIndex];
 
-							dweights[kerLineIndex + kerLine * currentLayer.KerDim[0]] += a * deltaZ;
-							
+		//					dweights[kerLineIndex + kerLine * currentLayer->KerDim[0]] += a * deltaZ;
+		//					
 
 
-							kerLineIndex++;
-						}
+		//					kerLineIndex++;
+		//				}
 
-						kerLine++;
+		//				kerLine++;
 
 
-						unsigned kerDimMult = 1;
-						unsigned kerDimIndex = 1;
-						while (kerDimIndex < currentLayer.KerDimCount)
-						{
-							if (kerDimIndex == 1)
-							{
-								posBuffer[1]++;
-							}
+		//				unsigned kerDimMult = 1;
+		//				unsigned kerDimIndex = 1;
+		//				while (kerDimIndex < currentLayer->KerDimCount)
+		//				{
+		//					if (kerDimIndex == 1)
+		//					{
+		//						posBuffer[1]++;
+		//					}
 
-							if (((posBuffer[kerDimIndex] - stridePosBuffer[kerDimIndex])) > currentLayer.KerDim[kerDimIndex])
-							{
-								posBuffer[kerDimIndex]++;
-								posBuffer[kerDimIndex - 1] = 0 + stridePosBuffer[kerDimIndex - 1];
-								kerDimMult *= currentLayer.KerDim[kerDimIndex];
+		//					if (((posBuffer[kerDimIndex] - stridePosBuffer[kerDimIndex])) > currentLayer->KerDim[kerDimIndex])
+		//					{
+		//						posBuffer[kerDimIndex]++;
+		//						posBuffer[kerDimIndex - 1] = 0 + stridePosBuffer[kerDimIndex - 1];
+		//						kerDimMult *= currentLayer->KerDim[kerDimIndex];
 
-							}
+		//					}
 
-							else
-							{
-								break;
-							}
-							kerDimIndex++;
-						}
+		//					else
+		//					{
+		//						break;
+		//					}
+		//					kerDimIndex++;
+		//				}
 
 
 
-					}
+		//			}
 
 
-					stridePosBuffer[0] += currentLayer.Stride[0];
-					unsigned kerDimIndex = 0;
-					while (kerDimIndex < currentLayer.KerDimCount - 1)
-					{
+		//			stridePosBuffer[0] += currentLayer->Stride[0];
+		//			unsigned kerDimIndex = 0;
+		//			while (kerDimIndex < currentLayer->KerDimCount - 1)
+		//			{
 
-						if ((stridePosBuffer[kerDimIndex] + (currentLayer.KerDim[kerDimIndex] - 1)) >= (prevLayer.LayerDim[kerDimIndex]))
-						{
+		//				if ((stridePosBuffer[kerDimIndex] + (currentLayer->KerDim[kerDimIndex] - 1)) >= (prevLayer.LayerDim[kerDimIndex]))
+		//				{
 
-							stridePosBuffer[kerDimIndex] = 0;
-							stridePosBuffer[kerDimIndex + 1] += currentLayer.Stride[kerDimIndex + 1];
+		//					stridePosBuffer[kerDimIndex] = 0;
+		//					stridePosBuffer[kerDimIndex + 1] += currentLayer->Stride[kerDimIndex + 1];
 
 
 
 
-						}
+		//				}
 
-						posBuffer[kerDimIndex] = 0 + stridePosBuffer[kerDimIndex];
-						posBuffer[kerDimIndex + 1] = 0 + stridePosBuffer[kerDimIndex + 1];
+		//				posBuffer[kerDimIndex] = 0 + stridePosBuffer[kerDimIndex];
+		//				posBuffer[kerDimIndex + 1] = 0 + stridePosBuffer[kerDimIndex + 1];
 
-						kerDimIndex++;
-					}
+		//				kerDimIndex++;
+		//			}
 
 
 
@@ -546,138 +542,138 @@ namespace TNNT
 
 
 
-					
+		//			
 
 
 
 
-					featureMapIndex++;
-				}
+		//			featureMapIndex++;
+		//		}
 
 
 
-				featureMap++;
-			}
+		//		featureMap++;
+		//	}
 
 
-			delete[] posBuffer;
-			delete[] stridePosBuffer;
+		//	delete[] posBuffer;
+		//	delete[] stridePosBuffer;
 
-		}
+		//}
 
 	
 
-		void PoolingLayerFeedForward(NetworkPrototype* n)
-		{
+		//void PoolingLayerFeedForward(NetworkPrototype* n)
+		//{
 
 
 
-			LayerLayout prevLayer = n->m_LayerLayout[n->m_LayerLayoutPosition - 1];
-			LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
+		//	LayerLayout prevLayer = n->m_LayerLayout[n->m_LayerLayoutPosition - 1];
+		//	LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
 
-			//Used with the "TensorOverlay" class to navigate the node array of prevLayer as an N-dimentional box.
-			unsigned* posBuffer = new unsigned[currentLayer.KerDimCount];
-			unsigned* stridePosBuffer = new unsigned[currentLayer.KerDimCount];
+		//	//Used with the "TensorOverlay" class to navigate the node array of prevLayer as an N-dimentional box.
+		//	unsigned* posBuffer = new unsigned[currentLayer->KerDimCount];
+		//	unsigned* stridePosBuffer = new unsigned[currentLayer->KerDimCount];
 
 
 
 
-			//Node count of individual feature maps
-			unsigned featureMapNodeCount = currentLayer.NodesCount / currentLayer.SubLayerCount;
-			unsigned featureMapWeightsCount = currentLayer.WeightsCount / currentLayer.SubLayerCount;
-			unsigned featureMapWeightLinesCount = featureMapWeightsCount / currentLayer.KerDim[0];
-			unsigned featureMapBiasesCount = currentLayer.BiasesCount / currentLayer.SubLayerCount;
+		//	//Node count of individual feature maps
+		//	unsigned featureMapNodeCount = currentLayer->NodesCount / currentLayer->SubLayerCount;
+		//	unsigned featureMapWeightsCount = currentLayer->WeightsCount / currentLayer->SubLayerCount;
+		//	unsigned featureMapWeightLinesCount = featureMapWeightsCount / currentLayer->KerDim[0];
+		//	unsigned featureMapBiasesCount = currentLayer->BiasesCount / currentLayer->SubLayerCount;
 
-			unsigned featureMap = 0;
-			while (featureMap < currentLayer.SubLayerCount)
-			{
+		//	unsigned featureMap = 0;
+		//	while (featureMap < currentLayer->SubLayerCount)
+		//	{
 
-				memset(posBuffer, 0, currentLayer.KerDimCount * sizeof(unsigned));
-				memset(stridePosBuffer, 0, currentLayer.KerDimCount * sizeof(unsigned));
+		//		memset(posBuffer, 0, currentLayer->KerDimCount * sizeof(unsigned));
+		//		memset(stridePosBuffer, 0, currentLayer->KerDimCount * sizeof(unsigned));
 
 
-				float* A = currentLayer.A + featureMap * featureMapNodeCount;
-				float* Z = currentLayer.Z + featureMap * featureMapNodeCount;
+		//		float* A = currentLayer->A + featureMap * featureMapNodeCount;
+		//		float* Z = currentLayer->Z + featureMap * featureMapNodeCount;
 
-				TensorOverlay prevA(prevLayer.A, prevLayer.NodesCount, prevLayer.LayerDim, prevLayer.LayerDimCount);
+		//		TensorOverlay prevA(prevLayer.A, prevLayer.NodesCount, prevLayer.LayerDim, prevLayer.LayerDimCount);
 
-				unsigned featureMapIndex = 0;
-				while (featureMapIndex < featureMapNodeCount)
-				{
-					
-					float max = 0;
+		//		unsigned featureMapIndex = 0;
+		//		while (featureMapIndex < featureMapNodeCount)
+		//		{
+		//			
+		//			float max = 0;
 
-					unsigned kerLine = 0;
-					while (kerLine < featureMapWeightLinesCount)
-					{
-						
+		//			unsigned kerLine = 0;
+		//			while (kerLine < featureMapWeightLinesCount)
+		//			{
+		//				
 
-						float* aLine = prevA.At(posBuffer);
-						unsigned kerLineIndex = 0;
-						while (kerLineIndex < currentLayer.KerDim[0])
-						{
-							
-							float a = aLine[kerLineIndex];
+		//				float* aLine = prevA.At(posBuffer);
+		//				unsigned kerLineIndex = 0;
+		//				while (kerLineIndex < currentLayer->KerDim[0])
+		//				{
+		//					
+		//					float a = aLine[kerLineIndex];
 
-							if (a > max)
-							{
-								max = a;
-							}
+		//					if (a > max)
+		//					{
+		//						max = a;
+		//					}
 
-							kerLineIndex++;
-						}
+		//					kerLineIndex++;
+		//				}
 
-						kerLine++;
+		//				kerLine++;
 
 
-						unsigned kerDimMult = 1;
-						unsigned kerDimIndex = 1;
-						while (kerDimIndex < currentLayer.KerDimCount)
-						{
-							if (kerDimIndex == 1)
-							{
-								posBuffer[1]++;
-							}
+		//				unsigned kerDimMult = 1;
+		//				unsigned kerDimIndex = 1;
+		//				while (kerDimIndex < currentLayer->KerDimCount)
+		//				{
+		//					if (kerDimIndex == 1)
+		//					{
+		//						posBuffer[1]++;
+		//					}
 
-							if (((posBuffer[kerDimIndex] - stridePosBuffer[kerDimIndex])) > currentLayer.KerDim[kerDimIndex])
-							{
-								posBuffer[kerDimIndex]++;
-								posBuffer[kerDimIndex - 1] = 0 + stridePosBuffer[kerDimIndex - 1];
-								kerDimMult *= currentLayer.KerDim[kerDimIndex];
+		//					if (((posBuffer[kerDimIndex] - stridePosBuffer[kerDimIndex])) > currentLayer->KerDim[kerDimIndex])
+		//					{
+		//						posBuffer[kerDimIndex]++;
+		//						posBuffer[kerDimIndex - 1] = 0 + stridePosBuffer[kerDimIndex - 1];
+		//						kerDimMult *= currentLayer->KerDim[kerDimIndex];
 
-							}
+		//					}
 
-							else
-							{
-								break;
-							}
-							kerDimIndex++;
-						}
+		//					else
+		//					{
+		//						break;
+		//					}
+		//					kerDimIndex++;
+		//				}
 
 
 
-					}
+		//			}
 
 
-					stridePosBuffer[0] += currentLayer.Stride[0];
-					unsigned kerDimIndex = 0;
-					while (kerDimIndex < currentLayer.KerDimCount - 1)
-					{
+		//			stridePosBuffer[0] += currentLayer->Stride[0];
+		//			unsigned kerDimIndex = 0;
+		//			while (kerDimIndex < currentLayer->KerDimCount - 1)
+		//			{
 
-						if ((stridePosBuffer[kerDimIndex] + (currentLayer.KerDim[kerDimIndex] - 1)) >= (prevLayer.LayerDim[kerDimIndex]))
-						{
+		//				if ((stridePosBuffer[kerDimIndex] + (currentLayer->KerDim[kerDimIndex] - 1)) >= (prevLayer.LayerDim[kerDimIndex]))
+		//				{
 
-							stridePosBuffer[kerDimIndex] = 0;
-							stridePosBuffer[kerDimIndex + 1] += currentLayer.Stride[kerDimIndex + 1];
+		//					stridePosBuffer[kerDimIndex] = 0;
+		//					stridePosBuffer[kerDimIndex + 1] += currentLayer->Stride[kerDimIndex + 1];
 
 
-						}
+		//				}
 
-						posBuffer[kerDimIndex] = 0 + stridePosBuffer[kerDimIndex];
-						posBuffer[kerDimIndex + 1] = 0 + stridePosBuffer[kerDimIndex + 1];
+		//				posBuffer[kerDimIndex] = 0 + stridePosBuffer[kerDimIndex];
+		//				posBuffer[kerDimIndex + 1] = 0 + stridePosBuffer[kerDimIndex + 1];
 
-						kerDimIndex++;
-					}
+		//				kerDimIndex++;
+		//			}
 
 
 
@@ -685,149 +681,149 @@ namespace TNNT
 
 
 
-					
+		//			
 
-					float z = max;
-					Z[featureMapIndex] = z;
-					float a = n->m_Functions.NeuronFunctions[n->m_LayerLayoutPosition - 1].f(z);
-					A[featureMapIndex] = a;
+		//			float z = max;
+		//			Z[featureMapIndex] = z;
+		//			float a = n->m_Functions.NeuronFunctions[n->m_LayerLayoutPosition - 1].f(z);
+		//			A[featureMapIndex] = a;
 
 
-					featureMapIndex++;
-				}
+		//			featureMapIndex++;
+		//		}
 
 
 
-				featureMap++;
-			}
+		//		featureMap++;
+		//	}
 
 
-			delete[] posBuffer;
-			delete[] stridePosBuffer;
+		//	delete[] posBuffer;
+		//	delete[] stridePosBuffer;
 
 
-		}
+		//}
 
-		void PoolingLayerBackpropegateZ(NetworkPrototype* n)
-		{
-			LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
-			LayerLayout latterLayer = n->m_LayerLayout[n->m_LayerLayoutPosition + 1];
+		//void PoolingLayerBackpropegateZ(NetworkPrototype* n)
+		//{
+		//	LayerLayout currentLayer = n->m_LayerLayout[n->m_LayerLayoutPosition];
+		//	LayerLayout latterLayer = n->m_LayerLayout[n->m_LayerLayoutPosition + 1];
 
-			//Used with the "TensorOverlay" class to navigate the node array of currentLayer as an N-dimentional box.
-			unsigned* posBuffer = new unsigned[latterLayer.KerDimCount];
-			unsigned* stridePosBuffer = new unsigned[latterLayer.KerDimCount];
+		//	//Used with the "TensorOverlay" class to navigate the node array of currentLayer as an N-dimentional box.
+		//	unsigned* posBuffer = new unsigned[latterLayer.KerDimCount];
+		//	unsigned* stridePosBuffer = new unsigned[latterLayer.KerDimCount];
 
-			//Set the delta weights array
-			memset(currentLayer.dZ, 0.0, currentLayer.ZCount * sizeof(float));
+		//	//Set the delta weights array
+		//	memset(currentLayer->dZ, 0.0, currentLayer->ZCount * sizeof(float));
 
 
-			//Node count of individual feature maps
-			unsigned featureMapNodeCount = latterLayer.NodesCount / latterLayer.SubLayerCount;
-			unsigned featureMapWeightsCount = latterLayer.WeightsCount / latterLayer.SubLayerCount;
-			unsigned featureMapWeightLinesCount = featureMapWeightsCount / latterLayer.KerDim[0];
-			unsigned featureMapBiasesCount = latterLayer.BiasesCount / latterLayer.SubLayerCount;
+		//	//Node count of individual feature maps
+		//	unsigned featureMapNodeCount = latterLayer.NodesCount / latterLayer.SubLayerCount;
+		//	unsigned featureMapWeightsCount = latterLayer.WeightsCount / latterLayer.SubLayerCount;
+		//	unsigned featureMapWeightLinesCount = featureMapWeightsCount / latterLayer.KerDim[0];
+		//	unsigned featureMapBiasesCount = latterLayer.BiasesCount / latterLayer.SubLayerCount;
 
-			unsigned featureMap = 0;
-			while (featureMap < latterLayer.SubLayerCount)
-			{
+		//	unsigned featureMap = 0;
+		//	while (featureMap < latterLayer.SubLayerCount)
+		//	{
 
-				memset(posBuffer, 0, latterLayer.KerDimCount * sizeof(unsigned));
-				memset(stridePosBuffer, 0, latterLayer.KerDimCount * sizeof(unsigned));
+		//		memset(posBuffer, 0, latterLayer.KerDimCount * sizeof(unsigned));
+		//		memset(stridePosBuffer, 0, latterLayer.KerDimCount * sizeof(unsigned));
 
 
 
-				float* latterDZ = latterLayer.dZ + featureMap * featureMapNodeCount;
-				float* latterZ = latterLayer.Z + featureMap * featureMapNodeCount;
+		//		float* latterDZ = latterLayer.dZ + featureMap * featureMapNodeCount;
+		//		float* latterZ = latterLayer.Z + featureMap * featureMapNodeCount;
 
 
-				TensorOverlay dZ(currentLayer.dZ, currentLayer.ZCount, currentLayer.LayerDim, currentLayer.LayerDimCount);
-				TensorOverlay Z(currentLayer.Z, currentLayer.ZCount, currentLayer.LayerDim, currentLayer.LayerDimCount);
+		//		TensorOverlay dZ(currentLayer->dZ, currentLayer->ZCount, currentLayer->LayerDim, currentLayer->LayerDimCount);
+		//		TensorOverlay Z(currentLayer->Z, currentLayer->ZCount, currentLayer->LayerDim, currentLayer->LayerDimCount);
 
-				unsigned featureMapIndex = 0;
-				while (featureMapIndex < featureMapNodeCount)
-				{
+		//		unsigned featureMapIndex = 0;
+		//		while (featureMapIndex < featureMapNodeCount)
+		//		{
 
-					float latterdz = latterDZ[featureMapIndex];
-					float latterz = latterZ[featureMapIndex];
+		//			float latterdz = latterDZ[featureMapIndex];
+		//			float latterz = latterZ[featureMapIndex];
 
 
 
-					unsigned kerLine = 0;
-					while (kerLine < featureMapWeightLinesCount)
-					{
+		//			unsigned kerLine = 0;
+		//			while (kerLine < featureMapWeightLinesCount)
+		//			{
 
-						float* dZLine = dZ.At(posBuffer);
-						float* ZLine = Z.At(posBuffer);
-						unsigned kerLineIndex = 0;
-						while (kerLineIndex < latterLayer.KerDim[0])
-						{
-							if (ZLine[kerLineIndex] == latterz)
-							{
-								float dAdZ = n->m_Functions.NeuronFunctionsDerivatives[n->m_LayerLayoutPosition - 1].f(ZLine[kerLineIndex]);
+		//				float* dZLine = dZ.At(posBuffer);
+		//				float* ZLine = Z.At(posBuffer);
+		//				unsigned kerLineIndex = 0;
+		//				while (kerLineIndex < latterLayer.KerDim[0])
+		//				{
+		//					if (ZLine[kerLineIndex] == latterz)
+		//					{
+		//						float dAdZ = n->m_Functions.NeuronFunctionsDerivatives[n->m_LayerLayoutPosition - 1].f(ZLine[kerLineIndex]);
 
-								dZLine[kerLineIndex] += dAdZ * latterdz;
-							}
-							else
-							{
-								dZLine[kerLineIndex] = 0;
-							}
-							
+		//						dZLine[kerLineIndex] += dAdZ * latterdz;
+		//					}
+		//					else
+		//					{
+		//						dZLine[kerLineIndex] = 0;
+		//					}
+		//					
 
-							kerLineIndex++;
-						}
+		//					kerLineIndex++;
+		//				}
 
-						kerLine++;
+		//				kerLine++;
 
 
-						unsigned kerDimMult = 1;
-						unsigned kerDimIndex = 1;
-						while (kerDimIndex < latterLayer.KerDimCount)
-						{
-							if (kerDimIndex == 1)
-							{
-								posBuffer[1]++;
-							}
+		//				unsigned kerDimMult = 1;
+		//				unsigned kerDimIndex = 1;
+		//				while (kerDimIndex < latterLayer.KerDimCount)
+		//				{
+		//					if (kerDimIndex == 1)
+		//					{
+		//						posBuffer[1]++;
+		//					}
 
-							if (((posBuffer[kerDimIndex] - stridePosBuffer[kerDimIndex])) > latterLayer.KerDim[kerDimIndex])
-							{
-								posBuffer[kerDimIndex]++;
-								posBuffer[kerDimIndex - 1] = 0 + stridePosBuffer[kerDimIndex - 1];
-								kerDimMult *= latterLayer.KerDim[kerDimIndex];
+		//					if (((posBuffer[kerDimIndex] - stridePosBuffer[kerDimIndex])) > latterLayer.KerDim[kerDimIndex])
+		//					{
+		//						posBuffer[kerDimIndex]++;
+		//						posBuffer[kerDimIndex - 1] = 0 + stridePosBuffer[kerDimIndex - 1];
+		//						kerDimMult *= latterLayer.KerDim[kerDimIndex];
 
-							}
+		//					}
 
-							else
-							{
-								break;
-							}
-							kerDimIndex++;
-						}
+		//					else
+		//					{
+		//						break;
+		//					}
+		//					kerDimIndex++;
+		//				}
 
 
 
-					}
+		//			}
 
 
-					stridePosBuffer[0] += latterLayer.Stride[0];
-					unsigned kerDimIndex = 0;
-					while (kerDimIndex < latterLayer.KerDimCount - 1)
-					{
+		//			stridePosBuffer[0] += latterLayer.Stride[0];
+		//			unsigned kerDimIndex = 0;
+		//			while (kerDimIndex < latterLayer.KerDimCount - 1)
+		//			{
 
-						if ((stridePosBuffer[kerDimIndex] + (latterLayer.KerDim[kerDimIndex] - 1)) >= (currentLayer.LayerDim[kerDimIndex]))
-						{
+		//				if ((stridePosBuffer[kerDimIndex] + (latterLayer.KerDim[kerDimIndex] - 1)) >= (currentLayer->LayerDim[kerDimIndex]))
+		//				{
 
-							stridePosBuffer[kerDimIndex] = 0;
-							stridePosBuffer[kerDimIndex + 1] += latterLayer.Stride[kerDimIndex + 1];
+		//					stridePosBuffer[kerDimIndex] = 0;
+		//					stridePosBuffer[kerDimIndex + 1] += latterLayer.Stride[kerDimIndex + 1];
 
 
 
-						}
+		//				}
 
-						posBuffer[kerDimIndex] = 0 + stridePosBuffer[kerDimIndex];
-						posBuffer[kerDimIndex + 1] = 0 + stridePosBuffer[kerDimIndex + 1];
+		//				posBuffer[kerDimIndex] = 0 + stridePosBuffer[kerDimIndex];
+		//				posBuffer[kerDimIndex + 1] = 0 + stridePosBuffer[kerDimIndex + 1];
 
-						kerDimIndex++;
-					}
+		//				kerDimIndex++;
+		//			}
 
 
 
@@ -840,23 +836,23 @@ namespace TNNT
 
 
 
-					featureMapIndex++;
-				}
+		//			featureMapIndex++;
+		//		}
 
 
 
-				featureMap++;
-			}
+		//		featureMap++;
+		//	}
 
 
-			delete[] posBuffer;
-			delete[] stridePosBuffer;
-		}
+		//	delete[] posBuffer;
+		//	delete[] stridePosBuffer;
+		//}
 
-		void PoolingLayerBackpropegateBW(NetworkPrototype* n)
-		{
+		//void PoolingLayerBackpropegateBW(NetworkPrototype* n)
+		//{
 
-		}
+		//}
 
 	}
 
@@ -901,13 +897,13 @@ namespace TNNT
 			while (layerIndex < n->m_OutputBufferCount)
 			{
 
-				float z = n->m_LayerLayout[n->m_LayerLayoutCount - 1].Z[layerIndex];
+				float z = n->m_LayerLayoutPointer->Z[layerIndex];
 				float a = n->m_OutputBuffer[layerIndex];
 				float y = n->m_TargetBuffer[layerIndex];
 
 				float dz = Math::CrossEntropyCostDerivative(z, a, y);
 
-				n->m_LayerLayout[n->m_LayerLayoutCount - 1].dZ[layerIndex] = dz;
+				n->m_LayerLayoutPointer->dZ[layerIndex] = dz;
 
 
 				layerIndex++;
@@ -928,16 +924,16 @@ namespace TNNT
 			//Always remember that the 0-th layer doesnt have any weights and biases.
 
 			unsigned layerPos = n->m_LayerLayoutPosition;
-			LayerLayout currentLayer = n->m_LayerLayout[layerPos];
+			LayerHeader* currentLayer = n->m_LayerLayoutPointer;
 
 			//unsigned index = 0;
-			//while (index < currentLayer.WeightsCount)
+			//while (index < currentLayer->WeightsCount)
 			//{
 
 
 
 
-			//	currentLayer.TempWeights[index] *= (1 - (currentLayer.LearningRate * currentLayer.RegularizationConstant / ((float)n->m_Data->TrainingCount)));
+			//	currentLayer->TempWeights[index] *= (1 - (currentLayer->LearningRate * currentLayer->RegularizationConstant / ((float)n->m_Data->TrainingCount)));
 
 
 
@@ -946,7 +942,7 @@ namespace TNNT
 
 			//}
 
-			Math::ScalarMult(currentLayer.TempWeights, (1 - (currentLayer.LearningRate * currentLayer.RegularizationConstant / ((float)n->m_Data->TrainingCount))), currentLayer.WeightsCount);
+			Math::ScalarMult(currentLayer->TempWeights, (1 - (currentLayer->LearningRate * currentLayer->RegularizationConstant / ((float)n->m_Data->TrainingCount))), currentLayer->WeightsCount);
 
 
 		}
@@ -966,43 +962,43 @@ namespace TNNT
 			//Always remember that the 0-th layer doesnt have any weights and biases, which means that the amount of layers you need to count is: m_layerLayoutCount-1
 
 			unsigned layerPos = n->m_LayerLayoutPosition;
-			LayerLayout currentLayer = n->m_LayerLayout[layerPos];
+			LayerHeader* currentLayer = n->m_LayerLayoutPointer;
 
 
 
 			
 			//unsigned index = 0;
-			//while (index < currentLayer.WeightsCount)
+			//while (index < currentLayer->WeightsCount)
 			//{
 
 
 
 
 
-			//	float temp = (currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)) * currentLayer.dWeights[index];
-			//	currentLayer.TempWeights[index] -= temp;
+			//	float temp = (currentLayer->LearningRate / ((float)n->m_HyperParameters.BatchCount)) * currentLayer->dWeights[index];
+			//	currentLayer->TempWeights[index] -= temp;
 
 
 			//	index++;
 			//}
 
-			Math::ScalarMultAdd(currentLayer.TempWeights, currentLayer.dWeights, -(currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)), currentLayer.WeightsCount);
+			Math::ScalarMultAdd(currentLayer->TempWeights, currentLayer->dWeights, -(currentLayer->LearningRate / ((float)n->m_HyperParameters.BatchCount)), currentLayer->WeightsCount);
 			
 
 
 			//index = 0;
-			//while (index < currentLayer.BiasesCount)
+			//while (index < currentLayer->BiasesCount)
 			//{
 
-			//	float tempB = (currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)) * currentLayer.dBiases[index];
-			//	currentLayer.TempBiases[index] -= tempB;
+			//	float tempB = (currentLayer->LearningRate / ((float)n->m_HyperParameters.BatchCount)) * currentLayer->dBiases[index];
+			//	currentLayer->TempBiases[index] -= tempB;
 
 			//	index++;
 			//	
 			//}
 
 
-			Math::ScalarMultAdd(currentLayer.TempBiases, currentLayer.dBiases, -(currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)), currentLayer.BiasesCount);
+			Math::ScalarMultAdd(currentLayer->TempBiases, currentLayer->dBiases, -(currentLayer->LearningRate / ((float)n->m_HyperParameters.BatchCount)), currentLayer->BiasesCount);
 
 		}
 
@@ -1015,43 +1011,43 @@ namespace TNNT
 			//Always remember that the 0-th layer doesnt have any weights and biases, which means that the amount of layers you need to count is: m_layerLayoutCount-1
 
 			unsigned layerPos = n->m_LayerLayoutPosition;
-			LayerLayout currentLayer = n->m_LayerLayout[layerPos];
+			LayerHeader* currentLayer  = n->m_LayerLayoutPointer;
 
 
 
 
 			//unsigned index = 0;
-			//while (index < currentLayer.WeightsCount)
+			//while (index < currentLayer->WeightsCount)
 			//{
 
 
 
 
 
-			//	float temp = (currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)) * currentLayer.dWeights[index];
-			//	currentLayer.TempWeights[index] -= temp;
+			//	float temp = (currentLayer->LearningRate / ((float)n->m_HyperParameters.BatchCount)) * currentLayer->dWeights[index];
+			//	currentLayer->TempWeights[index] -= temp;
 
 
 			//	index++;
 			//}
 
-			Math::ScalarMultAdd(currentLayer.TempWeights, currentLayer.dWeights, -(currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)), currentLayer.WeightsCount);
+			Math::ScalarMultAdd(currentLayer->TempWeights, currentLayer->dWeights, -(currentLayer->LearningRate / ((float)n->m_HyperParameters.BatchCount)), currentLayer->WeightsCount);
 
 
 
 			//index = 0;
-			//while (index < currentLayer.BiasesCount)
+			//while (index < currentLayer->BiasesCount)
 			//{
 
-			//	float tempB = (currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)) * currentLayer.dBiases[index];
-			//	currentLayer.TempBiases[index] -= tempB;
+			//	float tempB = (currentLayer->LearningRate / ((float)n->m_HyperParameters.BatchCount)) * currentLayer->dBiases[index];
+			//	currentLayer->TempBiases[index] -= tempB;
 
 			//	index++;
 			//	
 			//}
 
 
-			Math::ScalarMultAdd(currentLayer.TempBiases, currentLayer.dBiases, -(currentLayer.LearningRate / ((float)n->m_HyperParameters.BatchCount)), currentLayer.BiasesCount);
+			Math::ScalarMultAdd(currentLayer->TempBiases, currentLayer->dBiases, -(currentLayer->LearningRate / ((float)n->m_HyperParameters.BatchCount)), currentLayer->BiasesCount);
 
 		}
 
