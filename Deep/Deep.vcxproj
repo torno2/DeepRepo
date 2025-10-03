@@ -132,6 +132,7 @@
   <ItemGroup>
     <ClInclude Include="Control.h" />
     <ClInclude Include="DataProcessing.h" />
+    <ClInclude Include="FullyConnectedLayer.h" />
     <ClInclude Include="Layer.h" />
     <ClInclude Include="LayerFunctions.h" />
     <ClInclude Include="LayerFunctionsMT.h" />
@@ -146,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DataProcessing.cpp" />
+    <ClCompile Include="FullyConnectedLayer.cpp" />
     <ClCompile Include="Layer.cpp" />
     <ClCompile Include="LayerFunctions.cpp" />
     <ClCompile Include="LayerFunctionsMT.cpp" />
