@@ -1,17 +1,17 @@
 #pragma once
-//TODO: Make this an actual precompiled header 
-
 
 #include <stdio.h>
 #include <iostream>
-#include <stdint.h> 
+
 
 //Math
 //#include <limits>
+#include <stdint.h> 
 #include <cmath>
 #include <random>
-
 #include <immintrin.h>
+
+
 
 //File access
 #include <fstream>
@@ -39,11 +39,12 @@
 
 //User-made
 
-#include "Math.h"
-#include "TensorOverlay.h"
-#include "Utils.h"
-#include "TNNTConstantsAndDefines.h"
+#include "Math&Utils/Math.h"
+#include "Math&Utils/Utils.h"
 
+
+//These might have to be somewhere not in the pch
+#include "TNNTConstantsAndDefines.h"
 #include "Control.h"
 
 

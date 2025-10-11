@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "../pch.h"
 #include "NetworkPrototypeMT.h"
 
 
@@ -539,34 +539,34 @@ namespace TNNT
 
 
 
-		//unsigned layerLayoutIndex = 1;
-		//while (layerLayoutIndex < m_LayerLayoutCount)
-		//{
+		unsigned layerLayoutIndex = 1;
+		while (layerLayoutIndex < m_LayerLayoutCount)
+		{
 
-		//	LayerLayout prevLayer = m_LayerLayout[layerLayoutIndex - 1];
-		//	LayerLayout currentLayer = m_LayerLayout[layerLayoutIndex];
+			LayerLayout prevLayer = m_LayerLayout[layerLayoutIndex - 1];
+			LayerLayout currentLayer = m_LayerLayout[layerLayoutIndex];
 
-		//	unsigned start = m_WorkloadLayout.Nodes[2 * m_SlaveThreadCount * (layerLayoutIndex) + 2 * thread];
-		//	unsigned stop = m_WorkloadLayout.Nodes[2 * m_SlaveThreadCount * (layerLayoutIndex) + 2 * thread + 1];
-
-
+			unsigned start = m_WorkloadLayout.Nodes[2 * m_SlaveThreadCount * (layerLayoutIndex) + 2 * thread];
+			unsigned stop = m_WorkloadLayout.Nodes[2 * m_SlaveThreadCount * (layerLayoutIndex) + 2 * thread + 1];
 
 
 
-		//	unsigned prevLayerIndex = 0;
-		//	while (prevLayerIndex < prevLayer.NodesCount)
-		//	{
-		//		unsigned currentLayerIndex = start;
-		//		while (currentLayerIndex < stop)
-		//		{
 
-		//			currentLayer.WeightsTranspose[currentLayer.NodesCount * prevLayerIndex + currentLayerIndex] = currentLayer.Weights[prevLayer.NodesCount * currentLayerIndex + prevLayerIndex];
-		//			currentLayerIndex++;
-		//		}
-		//		prevLayerIndex++;
-		//	}
-		//	layerLayoutIndex++;
-		//}
+
+			unsigned prevLayerIndex = 0;
+			while (prevLayerIndex < prevLayer.NodesCount)
+			{
+				unsigned currentLayerIndex = start;
+				while (currentLayerIndex < stop)
+				{
+
+					currentLayer.WeightsTranspose[currentLayer.NodesCount * prevLayerIndex + currentLayerIndex] = currentLayer.Weights[prevLayer.NodesCount * currentLayerIndex + prevLayerIndex];
+					currentLayerIndex++;
+				}
+				prevLayerIndex++;
+			}
+			layerLayoutIndex++;
+		}
 		
 		
 	}

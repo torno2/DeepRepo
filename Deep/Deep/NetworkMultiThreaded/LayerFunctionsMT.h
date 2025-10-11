@@ -1,6 +1,6 @@
 #pragma once
 
-#include "NeuralNetworkCustomVariables.h"
+#include "../NeuralNetworkCustomVariables.h"
 #include "NetworkPrototypeMT.h"
 
 namespace TNNT

@@ -1,8 +1,10 @@
-#include "pch.h"
+#include "../pch.h"
 #include "Math.h"
 
 namespace Math
 {
+
+
 	float Identity(float z)
 	{
 		return z;

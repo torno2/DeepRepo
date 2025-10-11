@@ -1,5 +1,5 @@
 #pragma once
-#include "NeuralNetworkCustomVariables.h"
+#include "../NeuralNetworkCustomVariables.h"
 
 
 class std::thread;
