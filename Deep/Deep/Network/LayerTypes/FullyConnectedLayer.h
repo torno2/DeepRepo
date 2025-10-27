@@ -31,8 +31,8 @@ namespace TNNT {
 		float* outputZ;
 		float* outputA;
 
-		float* outputDA;
 		float* outputDZ;
+		float* outputDA;
 
 
 
@@ -45,20 +45,20 @@ namespace TNNT {
 	};
 
 
-	float* FullyConnectedSetup(FullyConnectedHyperParams n, float* storage);
+	float* FullyConnectedSetup(FullyConnectedHyperParams& n, float* storage, unsigned inputCount, unsigned outputCount, unsigned weightsCount, unsigned biasesCount);
 
-	void FullyConnectedFeedForward(FullyConnectedHyperParams n);
+	void FullyConnectedFeedForward(FullyConnectedHyperParams& n);
 
-	void FullyConnectedBackpropegateZ(FullyConnectedHyperParams n);
-	void FullyConnectedBackpropegateBW(FullyConnectedHyperParams n);
+	void FullyConnectedBackpropegateZ(FullyConnectedHyperParams& n);
+	void FullyConnectedBackpropegateBW(FullyConnectedHyperParams& n);
 
 
-	void FullyConnectedResetTranspose(FullyConnectedHyperParams n);
+	void FullyConnectedResetTranspose(FullyConnectedHyperParams& n);
 
-	void FullyConnectedSetWeightsToTemp(FullyConnectedHyperParams n);
-	void FullyConnectedSetTempToWeights(FullyConnectedHyperParams n);
-	void FullyConnectedSetBiasesToTemp(FullyConnectedHyperParams n);
-	void FullyConnectedSetTempToBiases(FullyConnectedHyperParams n);
+	void FullyConnectedSetWeightsToTemp(FullyConnectedHyperParams& n);
+	void FullyConnectedSetTempToWeights(FullyConnectedHyperParams& n);
+	void FullyConnectedSetBiasesToTemp(FullyConnectedHyperParams& n);
+	void FullyConnectedSetTempToBiases(FullyConnectedHyperParams& n);
 
 
 

@@ -3,7 +3,7 @@
 
 namespace TNNT
 {
-	void L2Regularization(float* tempParameter, unsigned paramterCounts, float learningRate, float regConstant, unsigned trainingSetCount);
+	void L2Regularization(float* tempParameterArray, unsigned paramterCounts, unsigned trainingSetCount, float learningRate = 0.01f, float regConstant = 0.001f );
 
-	void GradientDecent(float* tempParameter, float* derivativeParameter, unsigned paramCount, float learningRate, unsigned batchCount);
+	void GradientDecent(float* tempParameterArray, float* derivativeParameterArray, unsigned paramCount, unsigned batchSize, float learningRate = 0.01f);
 }

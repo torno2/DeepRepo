@@ -4,24 +4,19 @@
 
 
 
-#define InputNeuronFunction(x) Math::Sigmoid(x)
-#define InputNeuronFunctionDerivative(x) Math::SigmoidDerivative(x)
-
-#define OutputNeuronFunction(x) Math::Sigmoid(x)
-#define OutputNeuronFunctionDerivative(x) Math::SigmoidDerivative(x)
-
-
-#define InputNodesCount 784
-
 namespace TNNT {
 
 
 
 
-float* FullyConnectedSetup(FullyConnectedHyperParams n, float* storage)
+float* FullyConnectedSetup(FullyConnectedHyperParams& n, float* storage, unsigned inputCount, unsigned outputCount, unsigned weightsCount, unsigned biasesCount)
 {
 
-
+	n.inputNodesCount = inputCount;
+	n.outputNodesCount = outputCount;
+	n.WeightsCount = weightsCount;
+	n.BiasesCount = biasesCount;
+	
 
 
 
@@ -29,9 +24,10 @@ float* FullyConnectedSetup(FullyConnectedHyperParams n, float* storage)
 	n.inputA = n.inputZ + n.inputNodesCount;
 
 	n.inputDZ = n.inputA + n.inputNodesCount;
+	n.inputDA = n.inputDZ + n.inputNodesCount;
 
 
-	n.Weights = n.inputDZ + n.inputNodesCount;
+	n.Weights = n.inputDA + n.inputNodesCount;
 	n.Biases = n.Weights + n.WeightsCount;
 	n.WeightsTranspose = n.Biases + n.BiasesCount;
 
@@ -46,8 +42,9 @@ float* FullyConnectedSetup(FullyConnectedHyperParams n, float* storage)
 	n.outputA = n.outputZ + n.outputNodesCount;
 
 	n.outputDZ = n.outputA + n.outputNodesCount;
+	n.outputDA = n.outputDZ + n.outputNodesCount;
 
-	float* endpoint = n.outputDZ + n.outputNodesCount;
+	float* endpoint = n.outputZ;
 
 
 
@@ -56,7 +53,7 @@ float* FullyConnectedSetup(FullyConnectedHyperParams n, float* storage)
 	{
 		//For randomly initializing the weights and biases
 		std::default_random_engine generator;
-		std::normal_distribution<float> distribution(0.0f, 1 / sqrt(InputNodesCount));
+		std::normal_distribution<float> distribution(0.0f, 1 / sqrt(n.inputNodesCount));
 
 
 		unsigned index = 0;
@@ -128,7 +125,7 @@ float* FullyConnectedSetup(FullyConnectedHyperParams n, float* storage)
 	return endpoint;
 }
 
-void FullyConnectedFeedForward(FullyConnectedHyperParams n)
+void FullyConnectedFeedForward(FullyConnectedHyperParams& n)
 	{
 
 
@@ -151,7 +148,7 @@ void FullyConnectedFeedForward(FullyConnectedHyperParams n)
 
 
 
-	void FullyConnectedBackpropegateZ(FullyConnectedHyperParams n)
+	void FullyConnectedBackpropegateZ(FullyConnectedHyperParams& n)
 	{
 
 
@@ -176,7 +173,7 @@ void FullyConnectedFeedForward(FullyConnectedHyperParams n)
 		 
 	}
 
-	void FullyConnectedBackpropegateBW(FullyConnectedHyperParams n)
+	void FullyConnectedBackpropegateBW(FullyConnectedHyperParams& n)
 	{
 
 
@@ -199,7 +196,7 @@ void FullyConnectedFeedForward(FullyConnectedHyperParams n)
 		}
 
 	}
-	void FullyConnectedResetTranspose(FullyConnectedHyperParams n)
+	void FullyConnectedResetTranspose(FullyConnectedHyperParams& n)
 	{
 		unsigned inputIndex = 0;
 		while (inputIndex < n.inputNodesCount)
@@ -214,22 +211,22 @@ void FullyConnectedFeedForward(FullyConnectedHyperParams n)
 			inputIndex++;
 		}
 	}
-	void FullyConnectedSetWeightsToTemp(FullyConnectedHyperParams n)
+	void FullyConnectedSetWeightsToTemp(FullyConnectedHyperParams& n)
 	{
 		memcpy(n.Weights, n.tempWeights, sizeof(float) * n.WeightsCount);
 
 		FullyConnectedResetTranspose(n);
 	}
-	void FullyConnectedSetTempToWeights(FullyConnectedHyperParams n)
+	void FullyConnectedSetTempToWeights(FullyConnectedHyperParams& n)
 	{
 		memcpy(n.tempWeights, n.Weights, sizeof(float) * n.WeightsCount);
 	}
-	void FullyConnectedSetBiasesToTemp(FullyConnectedHyperParams n)
+	void FullyConnectedSetBiasesToTemp(FullyConnectedHyperParams& n)
 	{
 		memcpy(n.Biases, n.tempBiases, sizeof(float) * n.BiasesCount);
 	}
-	void FullyConnectedSetTempToBiases(FullyConnectedHyperParams n)
+	void FullyConnectedSetTempToBiases(FullyConnectedHyperParams& n)
 	{
 		memcpy(n.tempBiases, n.Biases, sizeof(float) * n.BiasesCount);
-	}
+	}	
 }

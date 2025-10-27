@@ -1,11 +1,15 @@
-//#include "pch.h"
-//#include "DataProcessing.h"
+#include "pch.h"
+#include "DataProcessing/DataProcessing.h"
+#include "Network/NetworkPrototype.h"
+#include "NeuralNetworkCustomVariables.h"
+
+
 
 
 
 #define traningCount 50000
 
-#define clean true
+#define clean false
 
 
 
@@ -40,16 +44,27 @@ int main() {
 
 		//Data Formating start
 
-		ProcessMNISTDataMT(10, data.TrainingInputs, data.TraningTargets, "trainLabel.idx1-ubyte", "trainIm.idx3-ubyte", data.TrainingCount);
-		ProcessMNISTDataMT(10, data.ValidationInputs, data.ValidationTargets, "trainLabel.idx1-ubyte", "trainIm.idx3-ubyte", data.ValidationCount, 50000);
-		ProcessMNISTDataMT(10, data.TestInputs, data.TestTargets, "testLabel.idx1-ubyte", "testIm.idx3-ubyte", data.TestCount);
+		ProcessMNISTDataMT(10, data.TrainingInputs, data.TraningTargets, "../../TestAndTraningSets/trainLabel.idx1-ubyte", "../../TestAndTraningSets/trainIm.idx3-ubyte", data.TrainingCount);
+		ProcessMNISTDataMT(10, data.ValidationInputs, data.ValidationTargets, "../../TestAndTraningSets/trainLabel.idx1-ubyte", "../../TestAndTraningSets/trainIm.idx3-ubyte", data.ValidationCount, 50000);
+		ProcessMNISTDataMT(10, data.TestInputs, data.TestTargets, "../../TestAndTraningSets/testLabel.idx1-ubyte", "../../TestAndTraningSets/testIm.idx3-ubyte", data.TestCount);
 
 		}
 
 #endif
 
+	
+	SetupNetwork(data.TrainingInputs, data.TraningTargets, data.TrainingCount);
 
-	//std::cin.get();
+
+	pr("Before:");;
+	TestNetwork(data.ValidationInputs, data.ValidationTargets, data.ValidationCount);
+
+	TrainingLoop();
+
+	pr("After");
+	TestNetwork(data.ValidationInputs, data.ValidationTargets, data.ValidationCount);
+
+	std::cin.get();
 }
 
 

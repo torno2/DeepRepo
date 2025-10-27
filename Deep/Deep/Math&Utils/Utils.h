@@ -18,6 +18,19 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
 
 void PrintWeights(unsigned* layout, unsigned layoutSize, float* weights,unsigned layer = 0);
 
+
+
+
+void ShuffleFloat(float* arr, std::mt19937& mersenneGenerator, unsigned count);
+
+void ShuffleInt(unsigned* arr, std::mt19937& mersenneGenerator, unsigned count);
+
+
+void ShuffleFloatTuples(float* arr, float* buffer,  std::mt19937& mersenneGenerator, unsigned count, unsigned elementsize );
+
+void ShuffleIntTuples(unsigned* arr, unsigned* buffer,  std::mt19937& mersenneGenerator, unsigned count, unsigned elementsize );
+
+
 template <typename T>
 void PArr(T* arr, unsigned count)
 {
@@ -112,7 +125,7 @@ public:
 	float Stop();
 };
 
-void PrintImg(float* img, unsigned width, unsigned height);
+void PrintImg(float* img, unsigned width=28, unsigned height=28);
 void PrintMat(float* mat, unsigned width, unsigned height);
 
 

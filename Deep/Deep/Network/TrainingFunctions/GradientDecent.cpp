@@ -5,16 +5,16 @@
 
 namespace TNNT
 {
-	void L2Regularization(float* tempParameterArray, unsigned paramterCounts, float learningRate, float regConstant, unsigned trainingSetCount)
+	void L2Regularization(float* tempParameterArray, unsigned paramterCounts, unsigned trainingSetCount, float learningRate, float regConstant)
 	{
 		Math::ScalarMult(tempParameterArray, (1 - (learningRate * regConstant / ((float)trainingSetCount))), paramterCounts);
 	}
 
-	void GradientDecent(float* tempParameter, float* derivativeParameter, unsigned paramCount, float learningRate, unsigned batchCount)
+	void GradientDecent(float* tempParameterArray, float* derivativeParameterArray, unsigned paramCount, unsigned batchSize, float learningRate )
 	{
 
 
-		Math::ScalarMultAdd(tempParameter, derivativeParameter, -(learningRate / ((float)batchCount)), paramCount);
+		Math::ScalarMultAdd(tempParameterArray, derivativeParameterArray, -(learningRate / ((float)batchSize)), paramCount);
 
 	}
 

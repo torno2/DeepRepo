@@ -49,6 +49,79 @@ void PrintWeights(unsigned* layout, unsigned layoutSize, float* weights,unsigned
 	}
 }
 
+void ShuffleFloat(float* arr, std::mt19937& mersenneGenerator, unsigned count)
+{
+	unsigned i = 0;
+	unsigned randomIndexCount = count;
+	while (i < count - 1)
+	{
+		unsigned randomIndex = (mersenneGenerator() % randomIndexCount) + i;
+
+		float buffer = arr[randomIndex];
+		arr[randomIndex] = arr[i];
+		arr[i] = buffer;
+
+		i++;
+		randomIndexCount--;
+	}
+}
+
+void ShuffleInt(unsigned* arr, std::mt19937& mersenneGenerator, unsigned count)
+{
+	unsigned i = 0;
+	unsigned randomIndexCount = count;
+	while (i < count - 1)
+	{
+		unsigned randomIndex = (mersenneGenerator() % randomIndexCount) + i;
+
+		unsigned buffer = arr[randomIndex];
+		arr[randomIndex] = arr[i];
+		arr[i] = buffer;
+
+		i++;
+		randomIndexCount--;
+	}
+}
+
+//For shuffeling "count" tuples of size "elementsize"
+void ShuffleFloatTuples(float* arr, float* buffer,  std::mt19937& mersenneGenerator, unsigned count, unsigned elementsize)
+{
+
+
+	unsigned i = 0;
+	unsigned randomIndexCount = count;
+	while (i < count-1)
+	{
+		unsigned randomIndex = (mersenneGenerator() % randomIndexCount) + i;
+
+		memcpy(buffer,&arr[elementsize *randomIndex], elementsize);
+		memcpy(&arr[elementsize * randomIndex],&arr[elementsize * i], elementsize);
+		memcpy(&arr[elementsize * i], buffer, elementsize);
+
+		i++;
+		randomIndexCount--;
+	}
+}
+
+//For shuffeling "count" tuples of size "elementsize"
+void ShuffleIntTuples(unsigned* arr, unsigned* buffer, std::mt19937& mersenneGenerator, unsigned count, unsigned elementsize)
+{
+
+	unsigned i = 0;
+	unsigned randomIndexCount = count;
+	while (i < count - 1)
+	{
+		unsigned randomIndex = (mersenneGenerator() % randomIndexCount) + i;
+
+		memcpy(buffer, &arr[elementsize * randomIndex], elementsize);
+		memcpy(&arr[elementsize * randomIndex], &arr[elementsize * i], elementsize);
+		memcpy(&arr[elementsize * i], buffer, elementsize);
+
+		i++;
+		randomIndexCount--;
+	}
+}
+
 void PrintImg(float* img, unsigned width, unsigned height)
 {
 	for (int j = 0; j < height; j++)
