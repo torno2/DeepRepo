@@ -19,8 +19,8 @@ namespace TNNT {
 
 		unsigned TrainingCount = 50000;
 
-		unsigned Epochs = 60;
-		unsigned BatchSize = 10;
+		unsigned Epochs = 1;
+		unsigned BatchSize = 15;
 
 		float LearningRate = 0.1f;
 		float RegConstant = 0.001f;

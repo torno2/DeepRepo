@@ -39,13 +39,9 @@
 
 //User-made
 
-#include "Math&Utils/Math.h"
-#include "Math&Utils/Utils.h"
+#include "../Math&Utils/Math.h"
+#include "../Math&Utils/Utils.h"
 
-
-//These might have to be somewhere not in the pch
-#include "TNNTConstantsAndDefines.h"
-#include "Control.h"
 
 
 

@@ -1,4 +1,6 @@
-#include "../pch.h"
+#include "pch.h"
+#include "non_pch_includes.h"
+
 #include "NetworkPrototype.h"
 
 //#ifdef FullyConnectedLayerDef
@@ -331,10 +333,7 @@
 namespace TNNT{
 
 
-#define Layer1NodeCount 784
-#define Layer2NodeCount 100
-#define Layer3NodeCount 30
-#define Layer4NodeCount 10
+
 
 	InputLayerParams il;
 	FullyConnectedHyperParams l1;

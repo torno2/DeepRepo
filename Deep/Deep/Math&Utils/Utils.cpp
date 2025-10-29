@@ -1,4 +1,5 @@
-#include "../pch.h"
+#include "pch.h"
+#include "non_pch_includes.h"
 #include "Utils.h"
 
 void PrintWeights(unsigned* layout, unsigned layoutSize, float* weights,unsigned layer)

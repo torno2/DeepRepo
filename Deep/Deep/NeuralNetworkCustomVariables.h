@@ -227,34 +227,34 @@ namespace TNNT
 //
 //
 //
-	struct DataSet
-	{
-		float* TrainingInputs;
-		float* TraningTargets;
-		unsigned TrainingCount;
+	//struct DataSet
+	//{
+	//	float* TrainingInputs;
+	//	float* TraningTargets;
+	//	unsigned TrainingCount;
 
-		float* ValidationInputs;
-		float* ValidationTargets;
-		unsigned ValidationCount;
+	//	float* ValidationInputs;
+	//	float* ValidationTargets;
+	//	unsigned ValidationCount;
 
-		float* TestInputs;
-		float* TestTargets;
-		unsigned TestCount;
+	//	float* TestInputs;
+	//	float* TestTargets;
+	//	unsigned TestCount;
 
 
 
-		~DataSet()
-		{
-			delete[] TrainingInputs;
-			delete[] TraningTargets;
+	//	~DataSet()
+	//	{
+	//		delete[] TrainingInputs;
+	//		delete[] TraningTargets;
 
-			delete[] ValidationInputs;
-			delete[] ValidationTargets;
+	//		delete[] ValidationInputs;
+	//		delete[] ValidationTargets;
 
-			delete[] TestInputs;
-			delete[] TestTargets;
-		}
-	};
+	//		delete[] TestInputs;
+	//		delete[] TestTargets;
+	//	}
+	//};
 //
 //	struct ConditionFunctionPointer
 //	{

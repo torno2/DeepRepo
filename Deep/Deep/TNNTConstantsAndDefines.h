@@ -15,6 +15,12 @@
 #define InputNodesCount 784
 #define OutputNodesCount 10
 
+#define Layer1NodeCount InputNodesCount
+#define Layer2NodeCount 100
+#define Layer3NodeCount 30
+#define Layer4NodeCount OutputNodesCount
+
+
 
 // Constants
 namespace TNNT

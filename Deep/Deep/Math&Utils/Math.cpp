@@ -1,4 +1,5 @@
-#include "../pch.h"
+#include "pch.h"
+#include "non_pch_includes.h"
 #include "Math.h"
 
 namespace Math

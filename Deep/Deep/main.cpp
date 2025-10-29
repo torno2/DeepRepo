@@ -1,4 +1,6 @@
 #include "pch.h"
+#include "non_pch_includes.h"
+
 #include "DataProcessing/DataProcessing.h"
 #include "Network/NetworkPrototype.h"
 #include "NeuralNetworkCustomVariables.h"
@@ -25,46 +27,49 @@ int main() {
 	t.Start();
 
 
-	DataSet data;
-	{
-		constexpr unsigned labelSize = 10;
-		constexpr unsigned inputSize = 28 * 28;
+	constexpr unsigned labelSize = 10;
+	constexpr unsigned inputSize = 28 * 28;
 
-		data.TrainingCount = traningCount;
-		data.TrainingInputs = new float[data.TrainingCount * inputSize];
-		data.TraningTargets = new float[data.TrainingCount * labelSize];
+	unsigned TrainingCount = traningCount;
+	float* TrainingInputs = new float[TrainingCount * inputSize];
+	float* TraningTargets = new float[TrainingCount * labelSize];
 
-		data.ValidationCount = 10000;
-		data.ValidationInputs = new float[data.ValidationCount * inputSize];
-		data.ValidationTargets = new float[data.ValidationCount * labelSize];
+	unsigned ValidationCount = 10000;
+	float* ValidationInputs = new float[ValidationCount * inputSize];
+	float* ValidationTargets = new float[ValidationCount * labelSize];
 
-		data.TestCount = 10000;
-		data.TestInputs = new float[data.TestCount * inputSize];
-		data.TestTargets = new float[data.TestCount * labelSize];
+	unsigned TestCount = 10000;
+	float* TestInputs = new float[TestCount * inputSize];
+	float* TestTargets = new float[TestCount * labelSize];
 
-		//Data Formating start
+	//Data Formating start
 
-		ProcessMNISTDataMT(10, data.TrainingInputs, data.TraningTargets, "../../TestAndTraningSets/trainLabel.idx1-ubyte", "../../TestAndTraningSets/trainIm.idx3-ubyte", data.TrainingCount);
-		ProcessMNISTDataMT(10, data.ValidationInputs, data.ValidationTargets, "../../TestAndTraningSets/trainLabel.idx1-ubyte", "../../TestAndTraningSets/trainIm.idx3-ubyte", data.ValidationCount, 50000);
-		ProcessMNISTDataMT(10, data.TestInputs, data.TestTargets, "../../TestAndTraningSets/testLabel.idx1-ubyte", "../../TestAndTraningSets/testIm.idx3-ubyte", data.TestCount);
+	ProcessMNISTDataMT(10, TrainingInputs, TraningTargets, "../../TestAndTraningSets/trainLabel.idx1-ubyte", "../../TestAndTraningSets/trainIm.idx3-ubyte", TrainingCount);
+	ProcessMNISTDataMT(10, ValidationInputs, ValidationTargets, "../../TestAndTraningSets/trainLabel.idx1-ubyte", "../../TestAndTraningSets/trainIm.idx3-ubyte", ValidationCount, 50000);
+	ProcessMNISTDataMT(10, TestInputs, TestTargets, "../../TestAndTraningSets/testLabel.idx1-ubyte", "../../TestAndTraningSets/testIm.idx3-ubyte", TestCount);
+	pr("Datafomating time: " << t.Stop());
 
-		}
+		
+	t.Start();
+	SetupNetwork(TrainingInputs, TraningTargets, TrainingCount);
+	pr("Setup time: " << t.Stop());
+	
 
+	t.Start();
+	TrainingLoop();
+	pr("Training time: " << t.Stop());
+
+	t.Start();
+	TestNetwork(ValidationInputs, ValidationTargets, ValidationCount);
+	pr("Test time: " << t.Stop());
+
+	std::cin.get();
+
+	
 #endif
 
 	
-	SetupNetwork(data.TrainingInputs, data.TraningTargets, data.TrainingCount);
 
-
-	pr("Before:");;
-	TestNetwork(data.ValidationInputs, data.ValidationTargets, data.ValidationCount);
-
-	TrainingLoop();
-
-	pr("After");
-	TestNetwork(data.ValidationInputs, data.ValidationTargets, data.ValidationCount);
-
-	std::cin.get();
 }
 
 

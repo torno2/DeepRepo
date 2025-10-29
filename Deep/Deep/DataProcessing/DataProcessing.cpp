@@ -1,4 +1,5 @@
-#include "../pch.h"
+#include "pch.h"
+#include "non_pch_includes.h"
 #include "DataProcessing.h"
 
 void ProcessMNISTData(float* imageStorage, float* labelStorage, const char* labelFilepath, const char* imageFilepath, const unsigned int num , const unsigned int first)
