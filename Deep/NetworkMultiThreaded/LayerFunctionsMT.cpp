@@ -1,5 +1,4 @@
-#include "pch.h"
-#include "non_pch_includes.h"
+
 //#include "LayerFunctionsMT.h"
 //
 //namespace TNNT
